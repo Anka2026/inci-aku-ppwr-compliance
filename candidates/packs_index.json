@@ -1,0 +1,13 @@
+{
+  "updated_at": "2026-08-17T13:54:45.185403+00:00",
+  "note": "Candidate packs only — frozen deliveries untouched",
+  "packs": [
+    {
+      "product_code": "CAND_DEMO01",
+      "set_code": "ST-021-STD-03",
+      "path": "C:\\Users\\burcu\\Documents\\YAZILIM\\İNCİ PPWR YAZILIMI\\candidates\\packs\\CAND_DEMO01",
+      "built_at": "2026-08-17T13:54:45.181341+00:00",
+      "complete": true
+    }
+  ]
+}
