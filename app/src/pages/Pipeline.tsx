@@ -8,6 +8,7 @@ import {
 } from "../api";
 
 import { withAccessToken } from "../download";
+import { BILINGUAL_RULE_TR, measureLabel, SCOPE_OPTIONS } from "../labels";
 
 const PHOTO_URL = (rel: string) =>
   withAccessToken(`/api/pipeline/photos/file?rel=${encodeURIComponent(rel)}`);
@@ -102,7 +103,7 @@ export default function Pipeline() {
       <h1>Dil & Foto</h1>
       <p className="lead">
         Ambalaj BOM satırlarını Türkçe / İngilizce görün ve bileşen fotoğraflarını eşleyin.
-        Dışa aktarım resmi teslimat setlerini değiştirmez.
+        Dışa aktarım onaylı arşivi değiştirmez.
       </p>
 
       {status && (
@@ -117,7 +118,7 @@ export default function Pipeline() {
           </article>
           <article className="kpi pass">
             <strong>TR/EN</strong>
-            <span>{status.bilingual_rule}</span>
+            <span>{BILINGUAL_RULE_TR}</span>
           </article>
         </div>
       )}
@@ -177,16 +178,17 @@ export default function Pipeline() {
 
       <form className="gap-form" onSubmit={onPreview}>
         <label>
-          Scope
+          Kapsam
           <select value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="starter">starter</option>
-            <option value="industrial">industrial</option>
-            <option value="container">container</option>
-            <option value="component">component</option>
+            {SCOPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="grow">
-          Packaging set
+          Ambalaj seti
           <input
             value={setCode}
             onChange={(e) => setSetCode(e.target.value)}
@@ -198,7 +200,7 @@ export default function Pipeline() {
           {busy ? "…" : "Önizle"}
         </button>
         <button type="button" disabled={busy || !setCode.trim()} onClick={() => void onExport()}>
-          Export aday
+          Adayı dışa aktar
         </button>
       </form>
 
@@ -208,18 +210,18 @@ export default function Pipeline() {
       {bilingual && (
         <div className="detail" style={{ marginTop: "1rem" }}>
           <h2>
-            Bilingual BOM · {bilingual.set_code}{" "}
-            <Link to={`/bom/${encodeURIComponent(bilingual.set_code)}`}>BOM</Link>
+            Çift dilli liste · {bilingual.set_code}{" "}
+            <Link to={`/bom/${encodeURIComponent(bilingual.set_code)}`}>Ambalaj BOM</Link>
             {" · "}
-            <Link to={`/pipeline`}>Pipeline</Link>
+            <Link to={`/dil-foto`}>Dil & Foto</Link>
           </h2>
-          <p className="meta">{bilingual.rule}</p>
+          <p className="meta">{BILINGUAL_RULE_TR}</p>
           <table className="data-table">
             <thead>
               <tr>
-                <th>Code</th>
+                <th>Kod</th>
                 <th>TR / EN</th>
-                <th>Qty</th>
+                <th>Adet</th>
                 <th>kg</th>
               </tr>
             </thead>
@@ -238,21 +240,21 @@ export default function Pipeline() {
                     <em>{line.en}</em>
                   </td>
                   <td>
-                    {line.qty ?? "—"} {line.uom || ""}
+                    {measureLabel(line.qty, "")} {measureLabel(line.uom, "")}
                   </td>
-                  <td>{line.line_weight ?? "—"}</td>
+                  <td>{measureLabel(line.line_weight)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {bilingual.lines.length === 0 && <p className="muted">Bu set için BOM satırı yok.</p>}
+          {bilingual.lines.length === 0 && <p className="muted">Bu set için ambalaj satırı yok.</p>}
         </div>
       )}
 
       {photos && (
         <div className="detail" style={{ marginTop: "1rem" }}>
           <h2>
-            Photo annex ·{" "}
+            Fotoğraf eki ·{" "}
             <span className={photos.matched === photos.bom_line_count ? "act-badge green" : "act-badge purple"}>
               {photos.matched}/{photos.bom_line_count}
             </span>{" "}

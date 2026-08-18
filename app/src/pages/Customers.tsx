@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, CustomerCard, CustomerCoverage, DesktopDropResult } from "../api";
 import DownloadLink from "../components/DownloadLink";
 import { isWebMode } from "../runtime";
+import { statusLabel } from "../labels";
 
 const STATE_TR: Record<string, string> = {
   ready: "Hazır",
@@ -146,8 +147,8 @@ export default function Customers() {
 
   return (
     <section>
-      <p className="eyebrow">{web ? "Teslimat · ZIP" : "Teslimat · masaüstü ZIP"}</p>
-      <h1>Müşteri teslimatı</h1>
+      <p className="eyebrow">Müşteri · ZIP</p>
+      <h1>Müşteri paketi</h1>
       <p className="lead">
         Müşteri kartına ürün kodlarını yazın. Hazırlık özeti eksikleri gösterir; ardından tam
         paket ZIP’ini indirin. Kod listesini elle yapıştırmak için{" "}
@@ -263,10 +264,10 @@ export default function Customers() {
                       {" "}
                       ·{" "}
                       {row.state === "ready"
-                        ? `${row.revision} · ${row.status}`
+                        ? `${row.revision} · ${statusLabel(row.status)}`
                         : row.state === "incomplete"
                           ? `${row.revision || "—"} · PDF/DOCX eksik`
-                          : "workspace’te yok"}
+                          : "kayıt yok"}
                     </span>
                   </li>
                 ))}

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, PackFile, RecordDetail, WsProduct, WsProductDetail } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
+import { scopeLabel, statusLabel } from "../labels";
 
 const FROZEN = ["starter", "industrial", "container", "component"] as const;
 type Source = "workspace" | (typeof FROZEN)[number];
@@ -118,21 +119,15 @@ export default function Search() {
       <p className="eyebrow">Ürün · doküman</p>
       <h1>Ürün arama</h1>
       <p className="lead">
-        Ürün kodunu yazın; Word ve PDF dosyalarını açın veya indirin. Varsayılan kaynak Workspace —
-        resmi paketler buradadır.
+        Ürün kodunu yazın; Word ve PDF dosyalarını açın veya indirin. Varsayılan kaynak revizyon
+        yönetimi — resmi paketler buradadır.
       </p>
       <form className="search-bar" onSubmit={onSearch}>
         <select value={source} onChange={(e) => setSource(e.target.value as Source)}>
-          <option value="workspace">workspace</option>
+          <option value="workspace">Revizyon</option>
           {FROZEN.map((s) => (
             <option key={s} value={s}>
-              {s === "starter"
-                ? "STARTER"
-                : s === "industrial"
-                  ? "INDUSTRIAL"
-                  : s === "container"
-                    ? "CONTAINER"
-                    : "COMPONENT"}
+              {scopeLabel(s)}
             </option>
           ))}
         </select>
@@ -148,11 +143,11 @@ export default function Search() {
       {err && <p className="error">{err}</p>}
       <LastDownloadBar />
       <p className="meta">
-        {total} sonuç · kaynak {source}
+        {total} sonuç · kaynak {source === "workspace" ? "Revizyon" : scopeLabel(source)}
         {source === "workspace" && (
           <>
             {" "}
-            · <Link to="/workspace">Workspace</Link>
+            · <Link to="/workspace">Revizyon</Link>
           </>
         )}
       </p>
@@ -169,7 +164,7 @@ export default function Search() {
                   {p.product_code}
                   <span className="muted"> · {p.current_revision || "—"}</span>
                   <span className={statusClass(p.status)} style={{ marginLeft: "0.4rem" }}>
-                    {p.status}
+                    {statusLabel(p.status)}
                   </span>
                   {!p.complete && (
                     <span className="act-badge purple" style={{ marginLeft: "0.35rem" }}>
@@ -208,7 +203,7 @@ export default function Search() {
               <h2>
                 {wsDetail.product.product_code}{" "}
                 <span className={statusClass(wsDetail.product.status)}>
-                  {wsDetail.product.status}
+                  {statusLabel(wsDetail.product.status)}
                 </span>
               </h2>
               <p className="meta">{wsDetail.product.description}</p>

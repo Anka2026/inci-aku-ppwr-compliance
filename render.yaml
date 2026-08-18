@@ -1,10 +1,10 @@
 # İnci Akü PPWR Compliance Suite — Render Blueprint
-# Dashboard: New → Blueprint → bu repo
+# Dashboard: New → Blueprint → bu repo (private)
 services:
   - type: web
     name: inci-ppwr-compliance
     runtime: docker
-    plan: starter
+    plan: standard
     region: frankfurt
     healthCheckPath: /api/health
     envVars:
@@ -16,10 +16,12 @@ services:
         value: /data/workspace
       - key: INCI_PPWR_DELIVERY_ROOT
         value: /data/delivery
+      - key: INCI_PPWR_CANDIDATES_ROOT
+        value: /data/candidates
       - key: INCI_PPWR_ADMIN_USER
         value: admin
       - key: INCI_PPWR_ADMIN_PASSWORD
-        generateValue: true
+        value: "160616"
       - key: INCI_PPWR_JWT_SECRET
         generateValue: true
       - key: INCI_PPWR_AUTH
@@ -27,4 +29,4 @@ services:
     disk:
       name: ppwr-data
       mountPath: /data
-      sizeGB: 25
+      sizeGB: 50

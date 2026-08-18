@@ -183,7 +183,7 @@ def rebuild_workspace_engine(*, issued_only: bool = False) -> dict:
     _write_xlsx(engine_path, records, verify)
     _write_launcher()
 
-    log_activity("workspace_engine_export", records=len(records), qa="PASS")
+    log_activity("workspace_engine_export", records=len(records))
     return {
         "engine": str(engine_path),
         "launcher": str(LAUNCHER),

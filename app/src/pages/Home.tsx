@@ -1,39 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ScopeInfo } from "../api";
-
-type Ev = { at: string; action: string; [k: string]: unknown };
+import {
+  actionBadge,
+  actionLabel,
+  eventCode,
+  eventDetail,
+  scopeLabel,
+  type ActivityEvent,
+} from "../labels";
 
 function fmtNum(n: number | null | undefined): string {
   if (n == null || Number.isNaN(n)) return "—";
   return new Intl.NumberFormat("tr-TR").format(n);
 }
 
-function actionLabel(action: string): string {
-  const map: Record<string, string> = {
-    desktop_zip: "ZIP teslimatı",
-    customer_zip: "Müşteri ZIP",
-    create_variant: "Yeni varyasyon",
-    revise: "Revizyon",
-    issue: "ISSUED",
-    complete_pdfs: "PDF tamamlandı",
-    bulk_create: "Toplu oluşturma",
-    engine_rebuild: "Engine yenileme",
-  };
-  return map[action] || action.replace(/_/g, " ");
-}
-
-function actionBadge(action: string): string {
-  const a = action.toLowerCase();
-  if (a.includes("zip") || a.includes("customer") || a.includes("desktop")) return "purple";
-  if (a.includes("complete") || a.includes("issue") || a.includes("engine")) return "green";
-  return "";
-}
-
 const SCOPE_META: Record<string, { title: string; blurb: string; tone: string }> = {
   starter: {
     title: "STARTER",
-    blurb: "Bireysel ambalaj · kontrollü delivery",
+    blurb: "Bireysel ambalaj · onaylı doküman seti",
     tone: "",
   },
   industrial: {
@@ -64,7 +49,7 @@ export default function Home() {
   const [wsProducts, setWsProducts] = useState<number | null>(null);
   const [wsIssued, setWsIssued] = useState<number | null>(null);
   const [scopes, setScopes] = useState<ScopeInfo[]>([]);
-  const [events, setEvents] = useState<Ev[]>([]);
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
     api
@@ -133,7 +118,7 @@ export default function Home() {
       },
       {
         to: "/gaps",
-        title: "DATA REQUIRED",
+        title: "Eksik Veri",
         desc: "Eksik ambalaj setini belirleyin",
         ico: "!",
         tone: "amber",
@@ -141,14 +126,14 @@ export default function Home() {
       {
         to: "/workspace",
         title: "Revizyon Yönetimi",
-        desc: "Revizyon, yayın ve teslimata hazır paket",
+        desc: "Revizyon, yayın ve tam paket",
         ico: "↻",
         tone: "",
       },
       {
         to: "/customers",
-        title: "Müşteri Teslimatı",
-        desc: "Kart · hazırlık · ZIP teslimatı",
+        title: "Müşteri Paketi",
+        desc: "Kart, hazırlık özeti ve ZIP",
         ico: "▦",
         tone: "purple",
       },
@@ -171,8 +156,7 @@ export default function Home() {
           <p className="eyebrow">PPWR Compliance Suite</p>
           <h1>PPWR Compliance Suite</h1>
           <p className="lead">
-            Ambalaj uygunluğu, teknik dosya ailesi ve ürün bazlı izlenebilirlik — tek platformda,
-            teslimata hazır.
+            Ambalaj uygunluğu, teknik dosya ailesi ve ürün bazlı izlenebilirlik — tek platformda.
           </p>
           <div className="scope-row">
             <span className="badge">
@@ -182,7 +166,7 @@ export default function Home() {
               INDUSTRIAL <strong>{fmtNum(industrialProducts)}</strong> ürün
             </span>
             <span className="badge">
-              Workspace <strong>{fmtNum(wsProducts)}</strong> · ISSUED {fmtNum(wsIssued)}
+              Revizyon <strong>{fmtNum(wsProducts)}</strong> · yayınlandı {fmtNum(wsIssued)}
             </span>
           </div>
         </div>
@@ -192,14 +176,14 @@ export default function Home() {
       </div>
 
       <div className="section-head">
-        <h2>Delivery kapsamları</h2>
+        <h2>Kapsamlar</h2>
         <Link to="/scopes">Doküman Merkezi →</Link>
       </div>
       <div className="scope-enter-grid">
         {orderedScopes.map((s) => {
           const m = SCOPE_META[s.key] || {
             title: s.key.toUpperCase(),
-            blurb: s.folder,
+            blurb: "",
             tone: "",
           };
           return (
@@ -234,7 +218,7 @@ export default function Home() {
           className={`kpi kpi-btn ${dataRequired && dataRequired > 0 ? "warn" : ""}`}
           onClick={() => navigate("/gaps")}
         >
-          <div className="kpi-label">DATA REQUIRED</div>
+          <div className="kpi-label">Eksik Veri</div>
           <strong>{fmtNum(dataRequired)}</strong>
           <span>Kapatılması gereken kayıt</span>
         </button>
@@ -254,7 +238,7 @@ export default function Home() {
 
       <div className="section-head">
         <h2>Hızlı erişim</h2>
-        <Link to="/workspace">Workspace →</Link>
+        <Link to="/workspace">Revizyon →</Link>
       </div>
       <div className="quick-grid">
         {quick.map((item) => (
@@ -295,10 +279,10 @@ export default function Home() {
       <div className="panel">
         <div className="section-head">
           <h2>Son işlemler</h2>
-          <Link to="/workspace">Workspace →</Link>
+          <Link to="/workspace">Revizyon →</Link>
         </div>
         {events.length === 0 ? (
-          <p className="muted">Henüz işlem kaydı yok. Ürün arama veya müşteri teslimatı ile başlayın.</p>
+          <p className="muted">Henüz işlem kaydı yok. Ürün arama veya müşteri paketi ile başlayın.</p>
         ) : (
           <table className="activity-table">
             <thead>
@@ -312,21 +296,8 @@ export default function Home() {
             </thead>
             <tbody>
               {events.map((ev, i) => {
-                const code =
-                  (ev.product_code as string) ||
-                  (ev.supplier_id as string) ||
-                  (ev.customer_id as string) ||
-                  (ev.doc_id as string) ||
-                  "—";
-                const detail = [
-                  ev.revision ? String(ev.revision) : "",
-                  ev.records != null ? `${ev.records} kayıt` : "",
-                  ev.count_ok != null ? `ok ${ev.count_ok}` : "",
-                  ev.name ? String(ev.name) : "",
-                  ev.qa ? `QA ${ev.qa}` : "",
-                ]
-                  .filter(Boolean)
-                  .join(" · ");
+                const code = eventCode(ev);
+                const detail = eventDetail(ev);
                 return (
                   <tr key={`${ev.at}-${i}`}>
                     <td>
@@ -346,13 +317,13 @@ export default function Home() {
                         <code>{code}</code>
                       )}
                     </td>
-                    <td>{detail || "—"}</td>
+                    <td>{detail}</td>
                     <td>
                       <span className={`act-badge ${actionBadge(String(ev.action))}`}>
                         {actionLabel(String(ev.action))}
                       </span>
                     </td>
-                    <td className="muted">{String(ev.scope || ev.doc_type || "workspace")}</td>
+                    <td className="muted">{scopeLabel(String(ev.scope || "workspace"))}</td>
                     <td className="muted">
                       {String(ev.at || "").slice(0, 19).replace("T", " ")}
                     </td>

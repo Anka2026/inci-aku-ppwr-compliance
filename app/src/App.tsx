@@ -22,16 +22,16 @@ import AccountPassword from "./components/AccountPassword";
 const links: { to: string; label: string; ico: string; end?: boolean }[] = [
   { to: "/", label: "Ana Sayfa", ico: "⌂", end: true },
   { to: "/search", label: "Ürün Arama", ico: "⌕" },
-  { to: "/workspace", label: "Workspace", ico: "▣" },
-  { to: "/customers", label: "Müşteri Teslimatı", ico: "▦" },
+  { to: "/workspace", label: "Revizyon", ico: "▣" },
+  { to: "/customers", label: "Müşteri Paketi", ico: "▦" },
   { to: "/suppliers", label: "Tedarikçi", ico: "◎" },
   { to: "/components", label: "Bileşen Matrisi", ico: "⬡" },
   { to: "/scopes", label: "Doküman Merkezi", ico: "▤" },
-  { to: "/gaps", label: "DATA REQUIRED", ico: "!" },
+  { to: "/gaps", label: "Eksik Veri", ico: "!" },
   { to: "/master", label: "Master Veri", ico: "☰" },
   { to: "/bom", label: "Ambalaj BOM", ico: "≡" },
   { to: "/drop", label: "Paket ZIP", ico: "↓" },
-  { to: "/pipeline", label: "Dil & Foto", ico: "⇢" },
+  { to: "/dil-foto", label: "Dil & Foto", ico: "⇢" },
   { to: "/packs", label: "Aday Paket", ico: "+" },
   { to: "/users", label: "Kullanıcılar", ico: "◇" },
 ];
@@ -116,11 +116,7 @@ export default function App() {
   }
 
   if (location.pathname === "/login") {
-    return (
-      <AuthGate>
-        <Login />
-      </AuthGate>
-    );
+    return <Login />;
   }
 
   return (
@@ -240,7 +236,8 @@ export default function App() {
               <Route path="/bom" element={<Bom />} />
               <Route path="/bom/:setCode" element={<Bom />} />
               <Route path="/gaps" element={<GapWizard />} />
-              <Route path="/pipeline" element={<Pipeline />} />
+              <Route path="/dil-foto" element={<Pipeline />} />
+              <Route path="/pipeline" element={<Navigate to="/dil-foto" replace />} />
               <Route path="/packs" element={<PackBuilder />} />
               <Route
                 path="/users"

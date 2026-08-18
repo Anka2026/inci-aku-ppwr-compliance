@@ -1,0 +1,13 @@
+{
+  "id": "SUP-DEMO_e2f5a5",
+  "code": "SUP-DEMO",
+  "name": "Demo Ambalaj A.S.",
+  "country": "TR",
+  "status": "ACTIVE",
+  "external_ref": "",
+  "contact": "",
+  "materials": "PE stretch film",
+  "note": "PPWR pilot",
+  "created_at": "2026-08-17T16:08:16.948179+00:00",
+  "updated_at": "2026-08-17T16:08:17.090832+00:00"
+}

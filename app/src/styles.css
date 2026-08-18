@@ -54,7 +54,8 @@
 html,
 body,
 #root {
-  min-height: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary);
 }
 
 body {
@@ -1491,6 +1492,30 @@ a.btn-ghost:hover {
   .doc-strip {
     grid-template-columns: 1fr;
   }
+
+  .activity-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.55rem;
+  }
+
+  .data-table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 
 .login-screen {
@@ -1505,7 +1530,8 @@ a.btn-ghost:hover {
 
 .login-card {
   width: min(420px, 100%);
-  background: var(--surface-1);
+  background: #111a2c;
+  color: #f8fafc;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   padding: 1.75rem 1.5rem 1.5rem;

@@ -3,24 +3,35 @@
 from __future__ import annotations
 
 import os
+import re
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from fastapi import HTTPException
 from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
 _REF = ROOT / "data_reference"
-PIMS_OUTPUT = Path(
-    os.environ.get(
-        "INCI_PPWR_MASTERS_ROOT",
-        os.environ.get(
-            "INCI_PPWR_DELIVERY_ROOT",
-            r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output",
-        ),
-    )
-)
+_PIMS = Path(r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output")
+
+
+def _master_roots() -> list[Path]:
+    roots: list[Path] = [_REF, ROOT / "delivery"]
+    env = os.environ.get("INCI_PPWR_MASTERS_ROOT") or os.environ.get("INCI_PPWR_DELIVERY_ROOT")
+    if env:
+        roots.insert(0, Path(env))
+    if _PIMS.exists():
+        roots.append(_PIMS)
+    seen: set[str] = set()
+    out: list[Path] = []
+    for r in roots:
+        key = str(r)
+        if key not in seen:
+            seen.add(key)
+            out.append(r)
+    return out
 
 STARTER_NAMES = ("INCI_AKU_PPWR_STARTER_MASTER_Rev00.xlsx",)
 INDUSTRIAL_NAMES = (
@@ -28,12 +39,50 @@ INDUSTRIAL_NAMES = (
     "INCI_AKU_PPWR_INDUSTRIAL_MASTER_Rev00.xlsx",
 )
 
+_STATUS_TR = {
+    "CONTROLLED PACKAGING SET": "Kontrollü ambalaj seti",
+    "BOM DATA REQUIRED": "Ambalaj verisi eksik",
+    "DATA REQUIRED": "Veri eksik",
+}
+
+
+def _public_status(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    return _STATUS_TR.get(raw.upper(), raw)
+
+
+_MEASURE_TR = {
+    "MASS-BASED / N/A": "Ağırlık bazlı / Yok",
+    "N/A / MASS-BASED": "Yok / Ağırlık bazlı",
+    "N/A / MASS BASED": "Yok / Ağırlık bazlı",
+    "MASS BASED / N/A": "Ağırlık bazlı / Yok",
+    "MASS-BASED": "Ağırlık bazlı",
+    "MASS BASED": "Ağırlık bazlı",
+    "N/A": "Yok",
+}
+
+
+def _public_measure(value: Any) -> Any:
+    if value is None or isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value
+    raw = str(value).strip()
+    if not raw:
+        return value
+    key = re.sub(r"\s+", " ", raw).upper().replace("–", "/").replace("—", "/")
+    if key in _MEASURE_TR:
+        return _MEASURE_TR[key]
+    out = re.sub(r"MASS[-\s]?BASED", "Ağırlık bazlı", raw, flags=re.I)
+    out = re.sub(r"\bN/A\b", "Yok", out, flags=re.I)
+    return out
+
 
 def master_path(kind: str) -> Path:
     names = STARTER_NAMES if kind == "starter" else INDUSTRIAL_NAMES if kind == "industrial" else ()
     if not names:
         raise HTTPException(404, f"Unknown master: {kind}")
-    roots = [PIMS_OUTPUT, _REF]
+    roots = _master_roots()
     for root in roots:
         for name in names:
             p = root / name
@@ -137,7 +186,7 @@ def search_products(kind: str, q: str | None, limit: int = 50) -> dict:
                 "product_code": pc,
                 "description": desc,
                 "set_code": str(row[set_i] or "") if set_i is not None else "",
-                "status": str(row[status_i] or "") if status_i is not None else "",
+                "status": _public_status(str(row[status_i] or "") if status_i is not None else ""),
                 "tare_kg": row[tare_i] if tare_i is not None else None,
             }
         )
@@ -172,7 +221,7 @@ def get_product(kind: str, code: str) -> dict:
             "product_code": pc,
             "description": str(row[desc_i] or "") if desc_i is not None else "",
             "set_code": str(row[set_i] or "") if set_i is not None else "",
-            "status": str(row[status_i] or "") if status_i is not None else "",
+            "status": _public_status(str(row[status_i] or "") if status_i is not None else ""),
             "tare_kg": row[tare_i] if tare_i is not None else None,
         }
         bom = []
@@ -197,10 +246,10 @@ def get_bom(kind: str, set_code: str) -> dict:
             {
                 "component_code": str(row[hi.get("Component Code", 3)] or ""),
                 "description": str(row[hi.get("Component Description", 4)] or ""),
-                "qty": row[hi.get("Quantity", 5)],
-                "uom": str(row[hi.get("UOM", 6)] or ""),
-                "unit_weight": row[hi.get("Unit Weight", 7)] if "Unit Weight" in hi else None,
-                "line_weight": row[hi.get("Line Weight", 8)] if "Line Weight" in hi else None,
+                "qty": _public_measure(row[hi.get("Quantity", 5)]),
+                "uom": _public_measure(str(row[hi.get("UOM", 6)] or "")),
+                "unit_weight": _public_measure(row[hi.get("Unit Weight", 7)]) if "Unit Weight" in hi else None,
+                "line_weight": _public_measure(row[hi.get("Line Weight", 8)]) if "Line Weight" in hi else None,
             }
         )
     # config meta

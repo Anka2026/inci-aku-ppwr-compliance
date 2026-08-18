@@ -59,6 +59,31 @@ SCOPE_API = {
     "component": "COMPONENT",
 }
 
+_REASON_MAP = {
+    "bulk smoke": "Toplu oluşturma",
+    "initial issue": "İlk yayın",
+    "label correction smoke test": "Etiket düzeltmesi",
+    "bulk import from master": "Master’dan toplu oluşturma",
+}
+
+
+def _public_reason(reason: str) -> str:
+    raw = (reason or "").strip()
+    if not raw:
+        return ""
+    mapped = _REASON_MAP.get(raw.lower())
+    if mapped:
+        return mapped
+    if re.search(r"\bsmoke\b", raw, re.I):
+        cleaned = re.sub(r"\bsmoke\s*(test)?\b", "", raw, flags=re.I)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip(" -·–—")
+        return cleaned or "Toplu oluşturma"
+    m = re.match(r"^ensure packs for customer\s*(.*)$", raw, re.I)
+    if m:
+        name = (m.group(1) or "").strip()
+        return f"Müşteri paketi: {name}" if name else "Müşteri paketi"
+    return raw
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -264,7 +289,7 @@ def list_revisions(code: str) -> list[dict]:
             {
                 "revision": folder.name,
                 "status": meta.get("status") or "DRAFT",
-                "reason": meta.get("reason") or "",
+                "reason": _public_reason(str(meta.get("reason") or "")),
                 "built_at": meta.get("built_at"),
                 "set_code": meta.get("set_code"),
                 "complete": all(f["exists"] for f in inv),
@@ -341,7 +366,7 @@ def create_variant(
     description: str = "",
     set_code: str = "",
     scope: str = "starter",
-    reason: str = "Initial issue",
+    reason: str = "İlk yayın",
     skip_pdf: bool = False,
     issue: bool = True,
 ) -> dict:
@@ -376,7 +401,7 @@ def create_variant(
         "product_code": key,
         "revision": rev,
         "status": status,
-        "reason": (reason or "Initial issue").strip(),
+        "reason": _public_reason(reason or "İlk yayın"),
         "description": desc,
         "set_code": sc,
         "scope": built["scope"],
@@ -419,7 +444,7 @@ def bulk_create_from_codes(
     *,
     codes: list[str],
     scope: str = "starter",
-    reason: str = "Bulk import from master",
+    reason: str = "Master’dan toplu oluşturma",
     skip_existing: bool = True,
     skip_pdf: bool = False,
 ) -> dict:
@@ -449,7 +474,7 @@ def bulk_create_from_codes(
     for key in keys:
         if (_product_dir(key) / "PRODUCT.json").exists():
             if skip_existing:
-                skipped.append({"product_code": key, "reason": "already in workspace"})
+                skipped.append({"product_code": key, "reason": "zaten kayıtlı"})
                 continue
             failed.append({"product_code": key, "error": "exists — use revise"})
             continue
@@ -592,9 +617,9 @@ def revise_product(
     """Bump to next Rev.xx; archive previous as SUPERSEDED. Reason required."""
     _ensure_ws()
     key = _safe_key(product_code)
-    reason = (reason or "").strip()
+    reason = _public_reason(reason)
     if len(reason) < 3:
-        raise HTTPException(400, "Revision reason required (min 3 chars)")
+        raise HTTPException(400, "Revizyon gerekçesi gerekli (en az 3 karakter)")
 
     product = _load_product(key)
     prev_rev = product.get("current_revision")

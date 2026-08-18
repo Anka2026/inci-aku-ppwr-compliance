@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 
 export default function Login() {
@@ -9,9 +9,17 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (localStorage.getItem("inci_ppwr_token")) {
-    return <Navigate to="/" replace />;
-  }
+  useEffect(() => {
+    const token = localStorage.getItem("inci_ppwr_token");
+    if (!token) return;
+    api
+      .authMe()
+      .then(() => navigate("/", { replace: true }))
+      .catch(() => {
+        localStorage.removeItem("inci_ppwr_token");
+        localStorage.removeItem("inci_ppwr_user");
+      });
+  }, [navigate]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -22,9 +30,7 @@ export default function Login() {
       navigate("/", { replace: true });
     } catch (ex) {
       const msg = String(ex);
-      if (msg.includes("404")) {
-        setErr("Sunucuya bağlanılamıyor. Biraz sonra tekrar deneyin.");
-      } else if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("Network request failed")) {
+      if (msg.includes("404") || msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
         setErr("Sunucuya bağlanılamıyor. Biraz sonra tekrar deneyin.");
       } else {
         setErr("Giriş başarısız. Kullanıcı adı veya şifreyi kontrol edin.");

@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": "usr_admin",
+      "username": "admin",
+      "display_name": "Administrator",
+      "role": "admin",
+      "salt": "fa399843c824632c812358c8010a0d0f",
+      "password_hash": "0bfdc3d90ce49d89a66c3551d68755fda75d29660f1c9675f714c3321cea517d",
+      "active": true,
+      "created_at": "2026-08-17T17:50:21.837126+00:00"
+    },
+    {
+      "id": "usr_68a45498",
+      "username": "ops1",
+      "display_name": "Operasyon",
+      "role": "user",
+      "salt": "e1f52b08b8db32333e89529db8c00bb4",
+      "password_hash": "843ea9a96719644fbb9e150d77afad2de24764285ee445f8252ba40a4b33cece",
+      "active": true,
+      "created_at": "2026-08-17T22:32:07.790068+00:00"
+    }
+  ],
+  "updated_at": "2026-08-17T23:19:20.439232+00:00"
+}

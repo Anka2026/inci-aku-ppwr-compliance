@@ -131,10 +131,10 @@ export default function GapWizard() {
   return (
     <section>
       <p className="eyebrow">Eksik ambalaj verisi</p>
-      <h1>DATA REQUIRED</h1>
+      <h1>Eksik Veri</h1>
       <p className="lead">
         Ürün açıklamasına göre ambalaj seti önerir. Öneriyi kaydedin, ardından Aday Paket ile
-        doküman üretin. Resmi teslimat setleri değişmez.
+        doküman üretin. Onaylı arşiv değişmez.
       </p>
 
       {workspace && !isWebMode() && (
@@ -157,7 +157,7 @@ export default function GapWizard() {
         </article>
         <article className="kpi pass">
           <strong>Korunur</strong>
-          <span>Resmi teslimat setleri</span>
+          <span>Onaylı arşiv</span>
         </article>
       </div>
 
@@ -196,7 +196,7 @@ export default function GapWizard() {
         <div className="detail" style={{ marginTop: "1rem" }}>
           <h2>Öneri · form {suggestResult.form}</h2>
           <p className="meta">
-            {suggestResult.product_code || productCode} — peer frekansına göre en yakın setler
+            {suggestResult.product_code || productCode} — benzer ürün sıklığına göre en yakın setler
           </p>
           <ul className="suggest-list">
             {suggestResult.suggestions.map((s) => (
@@ -212,17 +212,17 @@ export default function GapWizard() {
                     <strong>{s.set_code}</strong>
                     <span className="muted">
                       {" "}
-                      · {s.peer_products} peer · tare {s.tare_kg ?? "—"} · BOM {s.bom_lines}
+                      · {s.peer_products} benzer ürün · dara {s.tare_kg ?? "—"} kg · {s.bom_lines} satır
                     </span>
                     {s.description && <div className="muted">{s.description}</div>}
                   </span>
                 </label>
-                <Link to={`/bom/${encodeURIComponent(s.set_code)}`}>BOM</Link>
+                <Link to={`/bom/${encodeURIComponent(s.set_code)}`}>Set</Link>
               </li>
             ))}
           </ul>
           {suggestResult.suggestions.length === 0 && (
-            <p className="muted">Öneri bulunamadı — açıklamada form token kontrol edin.</p>
+            <p className="muted">Öneri bulunamadı — açıklamadaki ürün formunu kontrol edin.</p>
           )}
           <div className="engine-actions" style={{ marginTop: "0.75rem" }}>
             <button type="button" disabled={!picked || busy} onClick={() => void onSave()}>
@@ -244,7 +244,7 @@ export default function GapWizard() {
       <div className="split" style={{ marginTop: "1.5rem" }}>
         <div>
           <h2 className="section-title">
-            Master gap ({filteredGaps.length}
+            Master eksikler ({filteredGaps.length}
             {gapFilter ? `/${scan?.gaps.length || 0}` : ""})
           </h2>
           <form className="inline" style={{ marginBottom: "0.75rem" }} onSubmit={(e) => e.preventDefault()}>
@@ -252,7 +252,7 @@ export default function GapWizard() {
               value={gapFilter}
               onChange={(e) => setGapFilter(e.target.value)}
               placeholder="Kod / form / açıklama…"
-              aria-label="Gap filtresi"
+              aria-label="Eksik kayıt filtresi"
             />
           </form>
           <ul className="key-list">
@@ -265,7 +265,7 @@ export default function GapWizard() {
                 >
                   {g.product_code}
                   <span className="act-badge purple" style={{ marginLeft: "0.4rem" }}>
-                    {g.form || "gap"}
+                    {g.form || "eksik"}
                   </span>
                 </button>
               </li>
@@ -273,14 +273,14 @@ export default function GapWizard() {
             {scan && scan.gaps.length === 0 && (
               <li>
                 <p className="muted" style={{ padding: "0.75rem" }}>
-                  Açık gap yok (starter zaten CONTROLLED). Yeni ürün için yukarıdaki formu kullanın.
+                  Açık eksik yok — STARTER kayıtları kontrollü. Yeni ürün için yukarıdaki formu kullanın.
                 </p>
               </li>
             )}
             {scan && scan.gaps.length > 0 && filteredGaps.length === 0 && (
               <li>
                 <p className="muted" style={{ padding: "0.75rem" }}>
-                  Filtreyle eşleşen gap yok.
+                  Filtreyle eşleşen eksik yok.
                 </p>
               </li>
             )}

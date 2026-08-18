@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, WsProduct, WsProductDetail } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
+import { reasonLabel, SCOPE_OPTIONS, statusLabel } from "../labels";
 
 type WsEngineInfo = {
   delivery_root: string;
@@ -111,9 +112,11 @@ export default function Workspace() {
         description: description.trim(),
         set_code: setCode.trim(),
         scope,
-        reason: reason.trim() || "Initial issue",
+        reason: reason.trim() || "İlk yayın",
       });
-      setOkMsg(`${r.product.product_code} · ${r.revision.revision} · ${r.revision.status}`);
+      setOkMsg(
+        `${r.product.product_code} · ${r.revision.revision} · ${statusLabel(r.revision.status)}`,
+      );
       await refresh();
       await load(r.product.product_code);
     } catch (ex) {
@@ -137,7 +140,7 @@ export default function Workspace() {
         scope,
       });
       setOkMsg(
-        `Revize: ${r.superseded || "—"} → ${r.revision.revision} · ${r.revision.status}`,
+        `Revize: ${r.superseded || "—"} → ${r.revision.revision} · ${statusLabel(r.revision.status)}`,
       );
       setReviseReason("");
       await refresh();
@@ -158,10 +161,10 @@ export default function Workspace() {
   return (
     <section>
       <p className="eyebrow">Resmi kaynak · revizyon</p>
-      <h1>Workspace</h1>
+      <h1>Revizyon Yönetimi</h1>
       <p className="lead">
         Ürün paketlerinin resmi kaynağı. Taslak, yayın ve revizyon adımlarını yönetin; Word ve PDF
-        teslimatına hazır hale getirin. Toplu indirme: <Link to="/drop">Paket ZIP</Link>.
+        müşteri paketine hazır hale getirin. Toplu indirme: <Link to="/drop">Paket ZIP</Link>.
       </p>
 
       {engine && (
@@ -210,10 +213,15 @@ export default function Workspace() {
           <input value={setCode} onChange={(e) => setSetCode(e.target.value)} placeholder="ST-…" />
         </label>
         <label>
-          Scope
+          Kapsam
           <select value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="starter">starter</option>
-            <option value="industrial">industrial</option>
+            {SCOPE_OPTIONS.filter((o) => o.value === "starter" || o.value === "industrial").map(
+              (o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ),
+            )}
           </select>
         </label>
         <label className="grow">
@@ -221,7 +229,7 @@ export default function Workspace() {
           <input value={reason} onChange={(e) => setReason(e.target.value)} />
         </label>
         <button type="submit" disabled={busy}>
-          {busy ? "…" : "Yeni varyasyon (Rev.00)"}
+          {busy ? "…" : "Yeni paket (Rev.00)"}
         </button>
       </form>
 
@@ -293,7 +301,7 @@ export default function Workspace() {
                 className={statusFilter === s ? "picked-rev" : ""}
                 onClick={() => setStatusFilter(s)}
               >
-                {s || "Tümü"}
+                {s ? statusLabel(s) : "Tümü"}
               </button>
             ))}
           </div>
@@ -317,7 +325,7 @@ export default function Workspace() {
                     }
                     style={{ marginLeft: "0.35rem" }}
                   >
-                    {p.status}
+                    {statusLabel(p.status)}
                   </span>
                   {!p.complete && (
                     <span className="act-badge purple" style={{ marginLeft: "0.25rem" }}>
@@ -330,7 +338,7 @@ export default function Workspace() {
             {products.length === 0 && (
               <li>
                 <p className="muted" style={{ padding: "0.75rem" }}>
-                  Henüz workspace ürünü yok.
+                  Henüz ürün yok.
                 </p>
               </li>
             )}
@@ -344,7 +352,7 @@ export default function Workspace() {
           </ul>
         </div>
         <div className="detail">
-          {!selected && <p className="muted">Ürün seçin veya yeni varyasyon oluşturun</p>}
+          {!selected && <p className="muted">Ürün seçin veya yeni paket oluşturun</p>}
           {selected && (
             <>
               <h2>
@@ -358,7 +366,7 @@ export default function Workspace() {
                         : "act-badge"
                   }
                 >
-                  {selected.product.status}
+                  {statusLabel(selected.product.status)}
                 </span>
               </h2>
               <p className="meta">{selected.product.description}</p>
@@ -374,7 +382,7 @@ export default function Workspace() {
                 {" · "}
                 <Link to={`/customers`}>Müşteri</Link>
                 {" · "}
-                <Link to={`/drop`}>ZIP Drop</Link>
+                <Link to={`/drop`}>Paket ZIP</Link>
               </p>
 
               <h3 className="section-title">Revizyonlar</h3>
@@ -386,8 +394,8 @@ export default function Workspace() {
                       className={viewRev === r.revision ? "picked-rev" : ""}
                       onClick={() => setViewRev(r.revision)}
                     >
-                      {r.revision} · {r.status}
-                      {r.reason ? ` — ${r.reason}` : ""}
+                      {r.revision} · {statusLabel(r.status)}
+                      {r.reason ? ` — ${reasonLabel(r.reason)}` : ""}
                     </button>
                   </li>
                 ))}
@@ -408,7 +416,7 @@ export default function Workspace() {
                 </button>
               </form>
 
-              <h3 className="section-title">Dosyalar ({viewRev || "current"})</h3>
+              <h3 className="section-title">Dosyalar ({viewRev || "güncel"})</h3>
               <LastDownloadBar />
               <ul className="file-list">
                 {(files || []).map((f) => (
@@ -451,7 +459,9 @@ export default function Workspace() {
                     api
                       .wsCompletePdfs(selected.product.product_code, viewRev || undefined)
                       .then(async (r) => {
-                        setOkMsg(`PDF: ${r.product_code} ${r.revision} → ${r.status}`);
+                        setOkMsg(
+                          `PDF: ${r.product_code} ${r.revision} → ${statusLabel(r.status)}`,
+                        );
                         await load(selected.product.product_code);
                         await refresh();
                       })

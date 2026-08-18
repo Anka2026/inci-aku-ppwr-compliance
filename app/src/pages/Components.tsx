@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
+import { coverageLabel } from "../labels";
 
 type MatrixRow = {
   component_code: string;
@@ -121,7 +122,7 @@ export default function Components() {
                   }
                   style={{ marginLeft: "0.4rem" }}
                 >
-                  {r.coverage}
+                  {coverageLabel(r.coverage)}
                 </span>
                 <span className="muted">
                   {r.preferred_supplier ? ` · ${r.preferred_supplier}` : ""}
@@ -148,7 +149,7 @@ export default function Components() {
               <h2>{selected.component_code}</h2>
               <p className="meta">{selected.description || "—"}</p>
               <p className="meta">
-                Kapsam: <strong>{selected.coverage}</strong>
+                Kapsam: <strong>{coverageLabel(selected.coverage)}</strong>
                 {selected.set_codes?.[0] ? ` · set ${selected.set_codes[0]}` : ""}
                 {typeof selected.set_count === "number" && selected.set_count > 0
                   ? ` · ${selected.set_count} set`
@@ -169,7 +170,7 @@ export default function Components() {
                       <strong>{s.supplier_name}</strong>
                       <span className="muted">
                         {" "}
-                        · {s.readiness}
+                        · {coverageLabel(s.readiness)}
                         {s.preferred ? " · tercih" : ""}
                         {s.has_tds ? " · TDS var" : " · TDS yok"}
                       </span>
@@ -180,7 +181,7 @@ export default function Components() {
               {selected.set_codes?.[0] && (
                 <p className="meta" style={{ marginTop: "0.75rem" }}>
                   <Link to={`/bom/${encodeURIComponent(selected.set_codes[0])}`}>
-                    BOM: {selected.set_codes[0]}
+                    Ambalaj BOM: {selected.set_codes[0]}
                   </Link>
                 </p>
               )}

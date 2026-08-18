@@ -64,7 +64,7 @@ export default function DesktopDrop() {
       <h1>Paket ZIP</h1>
       <p className="lead">
         Ürün kodlarını yapıştırın veya kayıtlı <Link to="/customers">müşteri kartı</Link> seçin.
-        Workspace’te hazır olan Word + PDF paketleri tek ZIP olarak iner.
+        Revizyonda hazır olan Word + PDF paketleri tek ZIP olarak iner.
       </p>
 
       {customers.length > 0 && (
@@ -103,7 +103,7 @@ export default function DesktopDrop() {
             required
           />
         </label>
-        <p className="meta">{codeCount} kod · ZIP yalnızca workspace’te hazır paketleri alır</p>
+        <p className="meta">{codeCount} kod · ZIP yalnızca hazır paketleri alır</p>
         <div className="engine-actions">
           <button type="submit" disabled={busy || codeCount === 0}>
             {busy ? "Hazırlanıyor…" : web ? "ZIP indir" : "Masaüstüne ZIP"}
@@ -112,7 +112,7 @@ export default function DesktopDrop() {
             Müşteri kartları
           </Link>
           <Link to="/workspace" className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", padding: "0.55rem 0.9rem" }}>
-            Workspace
+            Revizyon
           </Link>
         </div>
       </form>

@@ -87,10 +87,10 @@ export default function Users() {
 
   return (
     <section>
-      <p className="eyebrow">Güvenlik · yalnızca admin</p>
+      <p className="eyebrow">Kullanıcılar</p>
       <h1>Kullanıcı yönetimi</h1>
       <p className="lead">
-        Yerleşik oturum. Yeni kullanıcı ekleyin, şifre sıfırlayın veya hesabı kapatın.
+        Yeni kullanıcı ekleyin, şifre sıfırlayın veya hesabı pasifleştirin.
       </p>
 
       {err && <p className="error">{err}</p>}

@@ -140,15 +140,38 @@ WEB_MODE = (
 )
 
 
+def _resolve_data_path(raw: str, *, fallbacks: list[Path] | None = None) -> Path:
+    p = Path(raw)
+    if not p.is_absolute():
+        p = (ROOT / p).resolve()
+    if p.exists():
+        return p
+    for alt in fallbacks or []:
+        if alt.exists():
+            return alt.resolve()
+    return p
+
+
 def load_config() -> dict:
     data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    # allow env override
     env_root = os.environ.get("INCI_PPWR_DELIVERY_ROOT")
     if env_root:
         data["deliveryRoot"] = env_root
     env_cand = os.environ.get("INCI_PPWR_CANDIDATES_ROOT")
     if env_cand:
         data["candidatesRoot"] = env_cand
+    data["deliveryRoot"] = str(
+        _resolve_data_path(
+            str(data.get("deliveryRoot") or "delivery"),
+            fallbacks=[
+                ROOT / "delivery",
+                Path(r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"),
+            ],
+        )
+    )
+    data["candidatesRoot"] = str(
+        _resolve_data_path(str(data.get("candidatesRoot") or "candidates"), fallbacks=[ROOT / "candidates"])
+    )
     return data
 
 
@@ -297,7 +320,7 @@ class VariantCreateRequest(BaseModel):
     description: str = ""
     set_code: str = ""
     scope: str = "starter"
-    reason: str = "Initial issue"
+    reason: str = "İlk yayın"
     skip_pdf: bool = False
     issue: bool = True
 
@@ -336,7 +359,7 @@ class CustomerZipRequest(BaseModel):
 class BulkCreateRequest(BaseModel):
     codes_text: str
     scope: str = "starter"
-    reason: str = "Bulk import from master"
+    reason: str = "Master’dan toplu oluşturma"
     skip_pdf: bool = False
 
 

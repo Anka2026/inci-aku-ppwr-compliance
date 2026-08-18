@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, MasterProduct, MasterSummary } from "../api";
+import { measureLabel, SCOPE_OPTIONS, statusLabel } from "../labels";
 
 type Kind = "starter" | "industrial";
 
@@ -60,8 +61,8 @@ export default function Master() {
       <p className="eyebrow">Ürün ve set referansı</p>
       <h1>Master Veri</h1>
       <p className="lead">
-        Ürün kartı ve ambalaj BOM satırlarını inceleyin. Bu ekran yalnızca okur; teslimat
-        dosyalarını değiştirmez.
+        Ürün kartı ve ambalaj BOM satırlarını inceleyin. Bu ekran yalnızca okur; kayıtlı
+        dosyaları değiştirmez.
       </p>
 
       <div className="scope-switcher">
@@ -89,7 +90,7 @@ export default function Master() {
                 ? "—"
                 : (summary.starter as { products?: number })?.products?.toLocaleString() ?? "—"}
             </strong>
-            <span>Starter products</span>
+            <span>STARTER ürün</span>
           </article>
           <article className="kpi">
             <strong>
@@ -97,7 +98,7 @@ export default function Master() {
                 ? "—"
                 : (summary.industrial as { products?: number })?.products?.toLocaleString() ?? "—"}
             </strong>
-            <span>Industrial products</span>
+            <span>INDUSTRIAL ürün</span>
           </article>
           <article className="kpi">
             <strong>
@@ -105,15 +106,20 @@ export default function Master() {
                 ? String((live as { unique_sets: number }).unique_sets)
                 : "—"}
             </strong>
-            <span>Unique packaging sets</span>
+            <span>Benzersiz ambalaj seti</span>
           </article>
         </div>
       )}
 
       <form className="search-bar" onSubmit={onSearch}>
         <select value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
-          <option value="starter">starter</option>
-          <option value="industrial">industrial</option>
+          {SCOPE_OPTIONS.filter((o) => o.value === "starter" || o.value === "industrial").map(
+            (o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ),
+          )}
         </select>
         <input
           value={q}
@@ -162,8 +168,8 @@ export default function Master() {
               <p className="meta">{selected.description || "—"}</p>
               <dl className="facts">
                 <div>
-                  <dt>Status</dt>
-                  <dd>{selected.status || "—"}</dd>
+                  <dt>Durum</dt>
+                  <dd>{statusLabel(selected.status)}</dd>
                 </div>
                 <div>
                   <dt>Set</dt>
@@ -178,20 +184,20 @@ export default function Master() {
                   </dd>
                 </div>
                 <div>
-                  <dt>Tare kg</dt>
+                  <dt>Dara (kg)</dt>
                   <dd>{selected.tare_kg ?? "—"}</dd>
                 </div>
               </dl>
               {selected.bom && selected.bom.length > 0 && (
                 <>
-                  <h3>BOM ({selected.bom.length})</h3>
+                  <h3>Ambalaj listesi ({selected.bom.length})</h3>
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Component</th>
-                        <th>Qty</th>
-                        <th>UOM</th>
-                        <th>Line kg</th>
+                        <th>Bileşen</th>
+                        <th>Adet</th>
+                        <th>Birim</th>
+                        <th>Satır kg</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -201,9 +207,9 @@ export default function Master() {
                             <strong>{line.component_code}</strong>
                             <div className="muted">{line.description}</div>
                           </td>
-                          <td>{line.qty ?? "—"}</td>
-                          <td>{line.uom || "—"}</td>
-                          <td>{line.line_weight ?? "—"}</td>
+                          <td>{measureLabel(line.qty)}</td>
+                          <td>{measureLabel(line.uom)}</td>
+                          <td>{measureLabel(line.line_weight)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -212,7 +218,7 @@ export default function Master() {
               )}
               {kind === "starter" && selected.set_code && (!selected.bom || selected.bom.length === 0) && (
                 <p className="muted">
-                  BOM yok veya set atanmamış.{" "}
+                  Ambalaj listesi yok veya set atanmamış.{" "}
                   <Link to={`/bom/${encodeURIComponent(selected.set_code)}`}>Set detayı</Link>
                 </p>
               )}

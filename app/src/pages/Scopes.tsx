@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { api, RecordDetail, ScopeInfo } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
+import { scopeLabel } from "../labels";
 
 const META: Record<
   string,
@@ -182,7 +183,7 @@ export default function Scopes() {
     return (
       <section>
         <p className="eyebrow">
-          <Link to="/scopes">Doküman Merkezi</Link> · kontrollü teslimat
+          <Link to="/scopes">Doküman Merkezi</Link> · onaylı arşiv
         </p>
         <div className="scope-switcher">
           {(["starter", "industrial", "container", "component"] as const).map((k) => {
@@ -252,12 +253,12 @@ export default function Scopes() {
           </button>
           {selected.key === "starter" && (
             <button type="button" onClick={() => navigate("/bom")}>
-              Packaging Sets / BOM
+              Ambalaj BOM
             </button>
           )}
           {selected.key === "starter" && (
             <button type="button" onClick={() => navigate("/gaps")}>
-              DATA REQUIRED
+              Eksik Veri
             </button>
           )}
           <button type="button" className="btn-ghost" onClick={() => navigate("/scopes")}>
@@ -324,7 +325,7 @@ export default function Scopes() {
               <>
                 <h2>{detail.key}</h2>
                 <p className="meta">
-                  Kapsam: {detail.scope}
+                  Kapsam: {scopeLabel(detail.scope)}
                   {docFilter ? ` · filtre ${docFilter}` : ""}
                 </p>
                 <ul className="file-list">
@@ -370,7 +371,7 @@ export default function Scopes() {
   return (
     <section>
       <p className="eyebrow">Doküman Merkezi</p>
-      <h1>Teslimat kapsamları</h1>
+      <h1>Kapsamlar</h1>
       <p className="lead">
         STARTER · INDUSTRIAL · CONTAINER · COMPONENT. Bir kapsam seçin, ürün kodunu arayın ve
         Word / PDF dosyalarını açın.

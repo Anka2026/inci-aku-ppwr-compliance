@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, BomResponse } from "../api";
+import { measureLabel } from "../labels";
 
 const RECENT_KEY = "inci_ppwr_bom_sets";
 
@@ -98,7 +99,7 @@ export default function Bom() {
         {data?.set_code && (
           <Link
             className="btn-ghost"
-            to={`/pipeline`}
+            to={`/dil-foto`}
             style={{ display: "inline-flex", alignItems: "center", padding: "0.55rem 0.9rem" }}
             onClick={() => {
               try {
@@ -116,7 +117,7 @@ export default function Bom() {
               }
             }}
           >
-            Pipeline →
+            Dil & Foto →
           </Link>
         )}
       </form>
@@ -127,29 +128,29 @@ export default function Bom() {
           {data.meta && Object.keys(data.meta).length > 0 && (
             <dl className="facts">
               <div>
-                <dt>Final ID</dt>
+                <dt>Nihai kod</dt>
                 <dd>{data.meta.final_id || "—"}</dd>
               </div>
               <div>
-                <dt>Tare kg</dt>
+                <dt>Dara (kg)</dt>
                 <dd>{data.meta.tare_kg ?? "—"}</dd>
               </div>
               <div>
-                <dt>Products on set</dt>
+                <dt>Bu setteki ürün</dt>
                 <dd>{data.meta.product_count ?? "—"}</dd>
               </div>
             </dl>
           )}
           {data.meta?.description && <p className="meta">{data.meta.description}</p>}
-          <p className="meta">{data.lines.length} BOM satırı</p>
+          <p className="meta">{data.lines.length} ambalaj satırı</p>
           <table className="data-table">
             <thead>
               <tr>
-                <th>Component</th>
-                <th>Qty</th>
-                <th>UOM</th>
-                <th>Unit kg</th>
-                <th>Line kg</th>
+                <th>Bileşen</th>
+                <th>Adet</th>
+                <th>Birim</th>
+                <th>Birim kg</th>
+                <th>Satır kg</th>
               </tr>
             </thead>
             <tbody>
@@ -163,15 +164,15 @@ export default function Bom() {
                     </strong>
                     <div className="muted">{line.description}</div>
                   </td>
-                  <td>{line.qty ?? "—"}</td>
-                  <td>{line.uom || "—"}</td>
-                  <td>{line.unit_weight ?? "—"}</td>
-                  <td>{line.line_weight ?? "—"}</td>
+                  <td>{measureLabel(line.qty)}</td>
+                  <td>{measureLabel(line.uom)}</td>
+                  <td>{measureLabel(line.unit_weight)}</td>
+                  <td>{measureLabel(line.line_weight)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {data.lines.length === 0 && <p className="muted">Bu set için BOM satırı yok.</p>}
+          {data.lines.length === 0 && <p className="muted">Bu set için ambalaj satırı yok.</p>}
         </div>
       )}
       {!data && !err && !loading && (

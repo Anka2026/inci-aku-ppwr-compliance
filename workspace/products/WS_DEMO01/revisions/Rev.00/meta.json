@@ -1,0 +1,18 @@
+{
+  "product_code": "WS_DEMO01",
+  "revision": "Rev.00",
+  "status": "SUPERSEDED",
+  "reason": "İlk yayın",
+  "description": "AKU,C-FLAT,DK,200AH,INCI SUPRA SENTOR",
+  "set_code": "ST-021-STD-03",
+  "scope": "STARTER",
+  "final_id": "IA-ST-021-STD-03",
+  "tare_kg": 31.8252,
+  "bom_lines": 8,
+  "photos": 8,
+  "pdf_ok": 4,
+  "pdf_fail": 0,
+  "built_at": "2026-08-17T15:07:30.003894+00:00",
+  "supersedes": null,
+  "superseded_at": "2026-08-17T15:07:30.013655+00:00"
+}

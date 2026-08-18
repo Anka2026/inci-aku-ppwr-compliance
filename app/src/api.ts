@@ -356,6 +356,7 @@ async function j<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers,
     credentials: "include",
+    signal: init?.signal ?? AbortSignal.timeout(15000),
   });
   if (r.status === 401 && !path.startsWith("/api/auth/")) {
     localStorage.removeItem("inci_ppwr_token");

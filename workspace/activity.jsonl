@@ -1,0 +1,7 @@
+{"at": "2026-08-17T15:38:09.868144+00:00", "action": "complete_pdfs", "product_code": "1000069", "revision": "Rev.00", "pdf_ok": 4, "pdf_fail": 0, "complete": true, "status": "ISSUED"}
+{"at": "2026-08-17T15:45:34.018657+00:00", "action": "workspace_engine_export", "records": 2, "qa": "PASS"}
+{"at": "2026-08-17T16:08:16.951880+00:00", "action": "supplier_save", "supplier_id": "SUP-DEMO_e2f5a5", "name": "Demo Ambalaj A.S."}
+{"at": "2026-08-17T16:08:17.088603+00:00", "action": "supplier_analyze", "supplier_id": "SUP-DEMO_e2f5a5", "doc_id": "TDS_e441e3ebd5"}
+{"at": "2026-08-17T16:08:17.093540+00:00", "action": "supplier_upload", "supplier_id": "SUP-DEMO_e2f5a5", "doc_id": "TDS_e441e3ebd5", "doc_type": "TDS", "name": "demo_tds.txt"}
+{"at": "2026-08-17T16:17:29.228008+00:00", "action": "supplier_link", "supplier_id": "SUP-DEMO_e2f5a5", "component_code": "4000130"}
+{"at": "2026-08-17T17:12:36.560544+00:00", "action": "complete_all_incomplete", "count": 0}

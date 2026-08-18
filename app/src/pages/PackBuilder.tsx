@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, CandidatePack, PackBuildResult } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
+import { SCOPE_OPTIONS } from "../labels";
 
 type EngineInfo = {
   delivery_root: string;
@@ -165,11 +166,11 @@ export default function PackBuilder() {
       <h1>Aday Paket</h1>
       <p className="lead">
         Eksik ürün için 4 Word + 4 PDF paketini üretin. PDF otomatik üretilir. Hazır paketi
-        Workspace’e alıp müşteri ZIP’ine ekleyebilirsiniz.
+        revizyon yönetimine alıp müşteri ZIP’ine ekleyebilirsiniz.
       </p>
 
       <div className="banner-safe">
-        <strong>Resmi teslimat setleri değişmez</strong>
+        <strong>Onaylı arşiv korunur</strong>
         <span>Çıktılar aday çalışma alanına yazılır</span>
         {!isWebMode() && (
           <button type="button" onClick={() => api.packsOpenFolder().catch((e) => setErr(String(e)))}>
@@ -213,7 +214,7 @@ export default function PackBuilder() {
           <input
             value={productCode}
             onChange={(e) => setProductCode(e.target.value)}
-            placeholder="örn. CAND001"
+            placeholder="örn. 1009999"
             required
           />
         </label>
@@ -234,12 +235,13 @@ export default function PackBuilder() {
           />
         </label>
         <label>
-          Scope
+          Kapsam
           <select value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="starter">starter</option>
-            <option value="industrial">industrial</option>
-            <option value="container">container</option>
-            <option value="component">component</option>
+            {SCOPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="check">
@@ -252,7 +254,7 @@ export default function PackBuilder() {
       </form>
       <p className="meta">
         Master ürün kodu girerseniz açıklama ve set boş kalabilir. Set önerisi için{" "}
-        <Link to="/gaps">DATA REQUIRED</Link>.
+        <Link to="/gaps">Eksik Veri</Link>.
       </p>
 
       {err && <p className="error">{err}</p>}
@@ -344,13 +346,13 @@ export default function PackBuilder() {
                 </span>
               </h2>
               <p className="meta">
-                <Link to={`/workspace`}>Workspace</Link>
+                <Link to={`/workspace`}>Revizyon</Link>
                 {" · "}
                 <Link to={`/search?q=${encodeURIComponent(selected.product_code)}&source=workspace`}>
                   Ara
                 </Link>
                 {" · "}
-                <Link to={`/gaps`}>DATA REQUIRED</Link>
+                <Link to={`/gaps`}>Eksik Veri</Link>
               </p>
               <dl className="facts">
                 <div>
@@ -366,11 +368,11 @@ export default function PackBuilder() {
                   </dd>
                 </div>
                 <div>
-                  <dt>Tare</dt>
+                  <dt>Dara (kg)</dt>
                   <dd>{String(selected.meta?.tare_kg ?? "—")}</dd>
                 </div>
                 <div>
-                  <dt>Photos</dt>
+                  <dt>Fotoğraf</dt>
                   <dd>{String(selected.meta?.photos ?? "—")}</dd>
                 </div>
               </dl>

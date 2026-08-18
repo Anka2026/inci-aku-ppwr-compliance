@@ -1,0 +1,18 @@
+{
+  "product_code": "1000069",
+  "revision": "Rev.00",
+  "status": "ISSUED",
+  "reason": "Toplu oluşturma",
+  "description": "AKÜ,C-FLAT,DK,200AH,İNCİ SUPRA SENTOR",
+  "set_code": "ST-021-STD-03",
+  "scope": "STARTER",
+  "final_id": "IA-ST-021-STD-03",
+  "tare_kg": 31.8252,
+  "bom_lines": 8,
+  "photos": 8,
+  "pdf_ok": 4,
+  "pdf_fail": 0,
+  "built_at": "2026-08-17T15:21:11.850794+00:00",
+  "supersedes": null,
+  "pdf_completed_at": "2026-08-17T15:38:09.862590+00:00"
+}

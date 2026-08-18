@@ -219,7 +219,7 @@ def ensure_customer_packs(
     bulk = bulk_create_from_codes(
         codes=codes,
         scope=scope,
-        reason=f"Ensure packs for customer {data.get('name')}",
+        reason=f"Müşteri paketi: {data.get('name')}",
         skip_existing=True,
         skip_pdf=skip_pdf,
     )

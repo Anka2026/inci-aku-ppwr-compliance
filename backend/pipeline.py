@@ -155,7 +155,7 @@ def bilingual_set_preview(set_code: str, scope: str = "starter") -> dict:
         "scope": scope,
         "meta": bom.get("meta") or {},
         "lines": lines,
-        "rule": "Turkish normal / English italic",
+        "rule": "Türkçe düz · İngilizce italik",
     }
 
 
@@ -282,7 +282,7 @@ def status() -> dict:
         "photo_root_exists": root.exists(),
         "image_count": len(imgs),
         "mapping_count": len(_mapping_rows()),
-        "bilingual_rule": "Turkish normal / English italic",
+        "bilingual_rule": "Türkçe düz · İngilizce italik",
         "write_policy": "candidates_only",
         "candidates_root": str(CANDIDATES),
     }

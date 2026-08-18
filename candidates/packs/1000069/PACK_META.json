@@ -1,0 +1,16 @@
+{
+  "product_code": "1000069",
+  "description": "AKÜ,C-FLAT,DK,200AH,İNCİ SUPRA SENTOR",
+  "set_code": "ST-021-STD-03",
+  "final_id": "IA-ST-021-STD-03",
+  "scope": "STARTER",
+  "tare_kg": 31.8252,
+  "bom_lines": 8,
+  "photos": 8,
+  "pdf_ok": 4,
+  "pdf_fail": 0,
+  "soffice": "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+  "built_at": "2026-08-18T11:11:59.506835+00:00",
+  "status": "CANDIDATE",
+  "note": "Not part of frozen delivery Rev.00"
+}

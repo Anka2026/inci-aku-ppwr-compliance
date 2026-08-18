@@ -9,6 +9,7 @@ import {
 } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
+import { coverageLabel, docTypeLabel } from "../labels";
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<SupplierCard[]>([]);
@@ -160,7 +161,7 @@ export default function Suppliers() {
 
   return (
     <section>
-      <p className="eyebrow">Tedarikçi · kanıt dosyası</p>
+      <p className="eyebrow">Tedarikçi · belgeler</p>
       <h1>Tedarikçi</h1>
       <p className="lead">
         TDS, analiz ve sertifika yükleyin. Bileşen bağlantıları{" "}
@@ -198,7 +199,7 @@ export default function Suppliers() {
                     }
                     style={{ marginLeft: "0.4rem" }}
                   >
-                    {s.readiness || "—"}
+                    {coverageLabel(s.readiness) || "—"}
                   </span>
                   <span className="muted">
                     {s.code ? ` · ${s.code}` : ""}
@@ -249,9 +250,9 @@ export default function Suppliers() {
               <label>
                 Durum
                 <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="ACTIVE">ACTIVE</option>
-                  <option value="PENDING">PENDING</option>
-                  <option value="INACTIVE">INACTIVE</option>
+                  <option value="ACTIVE">Aktif</option>
+                  <option value="PENDING">Beklemede</option>
+                  <option value="INACTIVE">Pasif</option>
                 </select>
               </label>
             </div>
@@ -391,9 +392,9 @@ export default function Suppliers() {
                   Tür
                   <select value={docType} onChange={(e) => setDocType(e.target.value)}>
                     <option value="TDS">TDS</option>
-                    <option value="ANALYSIS">ANALYSIS</option>
-                    <option value="CERTIFICATE">CERTIFICATE</option>
-                    <option value="OTHER">OTHER</option>
+                    <option value="ANALYSIS">Analiz</option>
+                    <option value="CERTIFICATE">Sertifika</option>
+                    <option value="OTHER">Diğer</option>
                   </select>
                 </label>
                 <label className="grow">
@@ -418,7 +419,7 @@ export default function Suppliers() {
                 {docs.map((d) => (
                   <li key={d.id}>
                     <span>
-                      {d.doc_type} · {d.title}
+                      {docTypeLabel(d.doc_type)} · {d.title}
                     </span>
                     <span>
                       <button
@@ -459,7 +460,7 @@ export default function Suppliers() {
               <h3 className="section-title">Analiz özeti</h3>
               <p className="meta">
                 {analysis.title} · {analysis.language_guess} · {analysis.char_count} karakter ·{" "}
-                {analysis.extract_ok ? "extract OK" : "extract zayıf"}
+                {analysis.extract_ok ? "okundu" : "zayıf okuma"}
               </p>
               <p className="meta">
                 PPWR sinyalleri:{" "}
