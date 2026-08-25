@@ -43,6 +43,7 @@ export default function Home() {
   const [starterSets, setStarterSets] = useState<number | null>(null);
   const [scopes, setScopes] = useState<ScopeInfo[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [activityOpen, setActivityOpen] = useState(false);
 
   useEffect(() => {
     api
@@ -74,7 +75,7 @@ export default function Home() {
     <section>
       <div className="hero-strip" aria-hidden>
         <img className="hero-shot" src="/hero-battery.png" alt="" />
-        <img className="hero-shot" src="/hero-battery-close.png" alt="" />
+        <img className="hero-shot" src="/hero-industrial-battery.png" alt="" />
         <img className="hero-shot" src="/hero-pack-still.png" alt="" />
       </div>
 
@@ -137,10 +138,21 @@ export default function Home() {
 
       <div className="panel">
         <div className="section-head">
-          <h2>Son İşlemler</h2>
+          <button
+            type="button"
+            className="section-fold"
+            aria-expanded={activityOpen}
+            onClick={() => setActivityOpen((v) => !v)}
+          >
+            <h2>Son İşlemler</h2>
+            <span className="fold-arrow" aria-hidden>
+              {activityOpen ? "▾" : "▸"}
+            </span>
+          </button>
           <Link to="/workspace">Revizyon →</Link>
         </div>
-        {events.length === 0 ? (
+        {activityOpen &&
+          (events.length === 0 ? (
           <p className="muted">Henüz işlem kaydı yok. Ürün arama veya müşteri paketi ile başlayın.</p>
         ) : (
           <table className="activity-table">
@@ -191,7 +203,7 @@ export default function Home() {
               })}
             </tbody>
           </table>
-        )}
+        ))}
       </div>
     </section>
   );

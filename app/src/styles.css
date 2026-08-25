@@ -657,7 +657,7 @@ button.doc-chip-btn.active {
 }
 
 .hero-strip .hero-shot:nth-child(2) {
-  object-position: 55% 40%;
+  object-position: 50% 50%;
 }
 
 .hero-strip .hero-shot:nth-child(3) {
@@ -805,6 +805,29 @@ button.kpi-btn:hover {
   font-size: 1.05rem;
   color: var(--text-primary);
   text-transform: capitalize;
+}
+
+button.section-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.section-fold:hover:not(:disabled) {
+  box-shadow: none;
+  filter: none;
+}
+
+.fold-arrow {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .quick-grid {
