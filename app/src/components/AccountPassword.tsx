@@ -14,7 +14,7 @@ export default function AccountPassword() {
   if (!open) {
     return (
       <button type="button" className="btn-ghost sidebar-logout nav-label" onClick={() => setOpen(true)}>
-        Şifre değiştir
+        Şifre Değiştir
       </button>
     );
   }
@@ -49,7 +49,7 @@ export default function AccountPassword() {
   return (
     <form className="account-pw" onSubmit={onSubmit}>
       <p className="nav-label" style={{ fontWeight: 600, marginBottom: "0.35rem" }}>
-        Şifre değiştir
+        Şifre Değiştir
       </p>
       <input
         type="password"

@@ -88,7 +88,7 @@ export default function Users() {
   return (
     <section>
       <p className="eyebrow">Kullanıcılar</p>
-      <h1>Kullanıcı yönetimi</h1>
+      <h1>Kullanıcı Yönetimi</h1>
       <p className="lead">
         Yeni kullanıcı ekleyin, şifre sıfırlayın veya hesabı pasifleştirin.
       </p>
@@ -98,7 +98,7 @@ export default function Users() {
 
       <div className="split">
         <div className="detail">
-          <h2 className="section-title">Yeni kullanıcı</h2>
+          <h2 className="section-title">Yeni Kullanıcı</h2>
           <form onSubmit={onCreate}>
             <label className="block-label">
               Kullanıcı adı
@@ -132,7 +132,7 @@ export default function Users() {
 
           {resetId && (
             <form onSubmit={onResetSubmit} style={{ marginTop: "1.25rem" }}>
-              <h2 className="section-title">Şifre sıfırla</h2>
+              <h2 className="section-title">Şifre Sıfırla</h2>
               <p className="meta">{users.find((u) => u.id === resetId)?.username}</p>
               <label className="block-label">
                 Yeni şifre

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, CandidatePack, PackBuildResult } from "../api";
+import FilePairList, { downloadKindLabel } from "../components/FilePairList";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
 import { SCOPE_OPTIONS } from "../labels";
@@ -376,36 +377,15 @@ export default function PackBuilder() {
                   <dd>{String(selected.meta?.photos ?? "—")}</dd>
                 </div>
               </dl>
-              <ul className="file-list">
-                {selected.files.map((f) => (
-                  <li key={f.name}>
-                    <span>
-                      {f.stem} · {f.kind}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={!f.exists}
-                      onClick={() =>
-                        api
-                          .packsOpen(selected.product_code, f.name)
-                          .then((r) =>
-                            capture(
-                              r.download_url,
-                              f.kind === "WORD" || f.kind === "docx" ? "WORD indir" : "PDF indir",
-                            ),
-                          )
-                          .catch((e) => setErr(String(e)))
-                      }
-                    >
-                      {!f.exists
-                        ? "yok"
-                        : f.kind === "WORD" || f.kind === "docx"
-                          ? "OPEN WORD"
-                          : "OPEN PDF"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <FilePairList
+                files={selected.files}
+                onOpen={(f) =>
+                  api
+                    .packsOpen(selected.product_code, f.name)
+                    .then((r) => capture(r.download_url, downloadKindLabel(f.kind, f.name)))
+                    .catch((e) => setErr(String(e)))
+                }
+              />
               <LastDownloadBar />
               <button
                 type="button"

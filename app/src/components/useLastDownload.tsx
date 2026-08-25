@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DownloadLink from "./DownloadLink";
 
-/** Inline “last file ready” strip after OPEN WORD / OPEN PDF. */
+/** Inline “last file ready” strip after WORD / PDF. */
 export function useLastDownload() {
   const [last, setLast] = useState<{ href: string; label: string } | null>(null);
 

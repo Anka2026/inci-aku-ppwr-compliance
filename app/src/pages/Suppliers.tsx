@@ -1,15 +1,218 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  api,
-  SupplierAnalysis,
-  SupplierCard,
-  SupplierDocument,
-  SupplierLink,
-} from "../api";
+import { coverageLabel, docTypeLabel, MATERIAL_FAMILY_LABEL } from "../labels";
+import { api, SubstanceDecl, SupplierAnalysis, SupplierCard, SupplierDocument, SupplierLink } from "../api";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
-import { coverageLabel, docTypeLabel } from "../labels";
+
+function blankDecl(): SubstanceDecl {
+  return { status: "unknown", evidence_date: "", evidence_doc_id: "", note: "" };
+}
+
+function LinkDeclCard({
+  supplierId,
+  link,
+  docs,
+  busy,
+  onBusy,
+  onSaved,
+  onUnlink,
+  onError,
+}: {
+  supplierId: string;
+  link: SupplierLink;
+  docs: SupplierDocument[];
+  busy: boolean;
+  onBusy: (v: boolean) => void;
+  onSaved: (links: SupplierLink[]) => void;
+  onUnlink: () => void;
+  onError: (msg: string) => void;
+}) {
+  const [material, setMaterial] = useState(link.material_family || "");
+  const [recycled, setRecycled] = useState(
+    link.recycled_content_pct == null ? "" : String(link.recycled_content_pct),
+  );
+  const [recNote, setRecNote] = useState(link.recyclability_note || "");
+  const [hm, setHm] = useState<SubstanceDecl>(link.heavy_metals || blankDecl());
+  const [svhc, setSvhc] = useState<SubstanceDecl>(link.svhc || blankDecl());
+  const [pfas, setPfas] = useState<SubstanceDecl>(link.pfas || blankDecl());
+
+  useEffect(() => {
+    setMaterial(link.material_family || "");
+    setRecycled(link.recycled_content_pct == null ? "" : String(link.recycled_content_pct));
+    setRecNote(link.recyclability_note || "");
+    setHm(link.heavy_metals || blankDecl());
+    setSvhc(link.svhc || blankDecl());
+    setPfas(link.pfas || blankDecl());
+  }, [link.id, link.updated_at]);
+
+  async function onSave() {
+    onBusy(true);
+    try {
+      const recycledVal = recycled.trim() === "" ? null : Number(recycled);
+      if (recycledVal != null && Number.isNaN(recycledVal)) {
+        onError("Geri dönüştürülmüş içerik sayı olmalı");
+        return;
+      }
+      const r = await api.suppliersUpdateLink(supplierId, link.id, {
+        material_family: material,
+        recycled_content_pct: recycledVal,
+        recyclability_note: recNote,
+        heavy_metals: hm,
+        svhc,
+        pfas,
+      });
+      onSaved(r.supplier.links || []);
+    } catch (ex) {
+      onError(String(ex));
+    } finally {
+      onBusy(false);
+    }
+  }
+
+  return (
+    <article className="decl-card">
+      <p className="decl-kicker">PPWR Beyanı · Madde 5</p>
+      <div className="decl-card-head">
+        <div>
+          <strong>
+            {link.component_code}
+            {link.preferred ? " · tercih" : ""}
+          </strong>
+          <p className="muted">
+            {link.description || "—"}
+            {link.set_code ? ` · ${link.set_code}` : ""}
+          </p>
+        </div>
+        <button type="button" className="btn-ghost" onClick={onUnlink}>
+          Kopar
+        </button>
+      </div>
+      <div className="decl-grid">
+        <label className="block-label">
+          Malzeme Ailesi
+          <select value={material} onChange={(e) => setMaterial(e.target.value)}>
+            <option value="">Seçilmedi</option>
+            {Object.entries(MATERIAL_FAMILY_LABEL).map(([k, lab]) => (
+              <option key={k} value={k}>
+                {lab}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block-label">
+          Geri Dönüştürülmüş %
+          <input
+            value={recycled}
+            onChange={(e) => setRecycled(e.target.value)}
+            inputMode="decimal"
+            placeholder="ör. 30"
+          />
+        </label>
+        <label className="block-label">
+          Ağır Metal (≤100 mg/kg)
+          <select
+            value={hm.status || "unknown"}
+            onChange={(e) => setHm({ ...hm, status: e.target.value })}
+          >
+            <option value="unknown">Seçilmedi</option>
+            <option value="compliant">Uygun (≤100 mg/kg)</option>
+            <option value="non_compliant">Uygun değil</option>
+            <option value="no_evidence">Kanıt yok</option>
+          </select>
+        </label>
+        <label className="block-label">
+          Ağır Metal Kanıt Belgesi
+          <select
+            value={hm.evidence_doc_id || ""}
+            onChange={(e) => setHm({ ...hm, evidence_doc_id: e.target.value })}
+          >
+            <option value="">Yok</option>
+            {docs.map((d) => (
+              <option key={d.id} value={d.id}>
+                {docTypeLabel(d.doc_type)} · {d.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block-label">
+          SVHC / REACH
+          <select
+            value={svhc.status || "unknown"}
+            onChange={(e) => setSvhc({ ...svhc, status: e.target.value })}
+          >
+            <option value="unknown">Seçilmedi</option>
+            <option value="none">SVHC yok</option>
+            <option value="present">SVHC var</option>
+            <option value="no_declaration">Beyan yok</option>
+          </select>
+        </label>
+        <label className="block-label">
+          SVHC Kanıt Belgesi
+          <select
+            value={svhc.evidence_doc_id || ""}
+            onChange={(e) => setSvhc({ ...svhc, evidence_doc_id: e.target.value })}
+          >
+            <option value="">Yok</option>
+            {docs.map((d) => (
+              <option key={d.id} value={d.id}>
+                {docTypeLabel(d.doc_type)} · {d.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        {svhc.status === "present" && (
+          <label className="block-label">
+            SVHC Madde Adı
+            <input
+              value={svhc.substance_name || ""}
+              onChange={(e) => setSvhc({ ...svhc, substance_name: e.target.value })}
+            />
+          </label>
+        )}
+        <label className="block-label">
+          PFAS
+          <select
+            value={pfas.status || "unknown"}
+            onChange={(e) => setPfas({ ...pfas, status: e.target.value })}
+          >
+            <option value="unknown">Seçilmedi</option>
+            <option value="not_added">Kasıtlı yok</option>
+            <option value="present">Var</option>
+            <option value="not_applicable">Gıda teması yok (N/A)</option>
+          </select>
+        </label>
+        <label className="block-label">
+          PFAS Kanıt Belgesi
+          <select
+            value={pfas.evidence_doc_id || ""}
+            onChange={(e) => setPfas({ ...pfas, evidence_doc_id: e.target.value })}
+          >
+            <option value="">Yok</option>
+            {docs.map((d) => (
+              <option key={d.id} value={d.id}>
+                {docTypeLabel(d.doc_type)} · {d.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block-label decl-span">
+          Geri Dönüşüm Notu
+          <input
+            value={recNote}
+            onChange={(e) => setRecNote(e.target.value)}
+            placeholder="mürekkep, yapışkan, etiket…"
+          />
+        </label>
+      </div>
+      <div className="engine-actions" style={{ marginTop: "0.65rem" }}>
+        <button type="button" disabled={busy} onClick={() => void onSave()}>
+          Beyanı Kaydet
+        </button>
+      </div>
+    </article>
+  );
+}
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<SupplierCard[]>([]);
@@ -293,8 +496,11 @@ export default function Suppliers() {
 
           {selectedId && (
             <div style={{ marginTop: "1rem" }}>
-              <h3 className="section-title">Ambalaj bileşeni bağla</h3>
-              <p className="meta">Master BOM’dan bileşen ara → tedarikçiye bağla (PPWR izlenebilirlik).</p>
+              <h3 className="section-title">Ambalaj Bileşeni Bağla</h3>
+              <p className="meta">
+                Master BOM’dan bileşen bağlayın. Ağır metal / SVHC / PFAS kayıtları yazılımda saklanır;
+                mevcut Technical File ve DoC değişmez.
+              </p>
               <div className="pack-form">
                 <label className="grow">
                   Bileşen ara
@@ -356,37 +562,38 @@ export default function Suppliers() {
                 </ul>
               )}
               {links.length > 0 && (
-                <ul className="file-list" style={{ marginTop: "0.75rem" }}>
+                <div style={{ marginTop: "0.75rem" }}>
                   {links.map((l) => (
-                    <li key={l.id}>
-                      <span>
-                        {l.component_code} · {l.description || "—"}
-                        {l.preferred ? " · tercih" : ""}
-                        {l.set_code ? ` · ${l.set_code}` : ""}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        onClick={() =>
-                          api
-                            .suppliersUnlink(selectedId, l.id)
-                            .then(() => load(selectedId))
-                            .then(() => refresh())
-                            .catch((e) => setErr(String(e)))
-                        }
-                      >
-                        Kopar
-                      </button>
-                    </li>
+                    <LinkDeclCard
+                      key={l.id}
+                      supplierId={selectedId}
+                      link={l}
+                      docs={docs}
+                      busy={busy}
+                      onBusy={setBusy}
+                      onSaved={(next) => {
+                        setLinks(next);
+                        setOkMsg(`Beyan kaydedildi: ${l.component_code}`);
+                        setErr("");
+                      }}
+                      onUnlink={() =>
+                        api
+                          .suppliersUnlink(selectedId, l.id)
+                          .then(() => load(selectedId))
+                          .then(() => refresh())
+                          .catch((e) => setErr(String(e)))
+                      }
+                      onError={(msg) => setErr(msg)}
+                    />
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           )}
 
           {selectedId && (
             <form onSubmit={onUpload} style={{ marginTop: "1rem" }}>
-              <h3 className="section-title">TDS / Analiz yükle</h3>
+              <h3 className="section-title">TDS / Analiz Yükle</h3>
               <div className="pack-form">
                 <label>
                   Tür
@@ -394,6 +601,9 @@ export default function Suppliers() {
                     <option value="TDS">TDS</option>
                     <option value="ANALYSIS">Analiz</option>
                     <option value="CERTIFICATE">Sertifika</option>
+                    <option value="HEAVY_METALS">Ağır Metal Beyanı</option>
+                    <option value="SVHC">REACH / SVHC Beyanı</option>
+                    <option value="PFAS">PFAS Beyanı</option>
                     <option value="OTHER">Diğer</option>
                   </select>
                 </label>
@@ -457,7 +667,7 @@ export default function Suppliers() {
 
           {analysis && (
             <div className="detail" style={{ marginTop: "1rem" }}>
-              <h3 className="section-title">Analiz özeti</h3>
+              <h3 className="section-title">Analiz Özeti</h3>
               <p className="meta">
                 {analysis.title} · {analysis.language_guess} · {analysis.char_count} karakter ·{" "}
                 {analysis.extract_ok ? "okundu" : "zayıf okuma"}

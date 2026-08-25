@@ -46,7 +46,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <p className="eyebrow">PPWR Compliance Suite</p>
+          <p className="eyebrow" lang="en">PPWR Compliance Suite</p>
           <h1>Yükleniyor</h1>
           <p className="lead">Oturum kontrol ediliyor…</p>
         </div>

@@ -118,6 +118,7 @@ from suppliers import (  # noqa: E402
     save_supplier,
     suppliers_for_component,
     unlink_component as supplier_unlink_component,
+    update_link as supplier_update_link,
     upload_document as supplier_upload_document,
 )
 from pipeline import (  # noqa: E402
@@ -391,6 +392,26 @@ class SupplierLinkRequest(BaseModel):
     scope: str = "starter"
 
 
+class SupplierDeclPatch(BaseModel):
+    status: str | None = None
+    evidence_date: str | None = None
+    evidence_doc_id: str | None = None
+    note: str | None = None
+    substance_name: str | None = None
+    candidate_list_date: str | None = None
+
+
+class SupplierLinkUpdateRequest(BaseModel):
+    preferred: bool | None = None
+    note: str | None = None
+    material_family: str | None = None
+    recycled_content_pct: float | None = None
+    recyclability_note: str | None = None
+    heavy_metals: SupplierDeclPatch | None = None
+    svhc: SupplierDeclPatch | None = None
+    pfas: SupplierDeclPatch | None = None
+
+
 @app.get("/api/suppliers")
 def api_suppliers(q: str = ""):
     return list_suppliers(q)
@@ -494,6 +515,16 @@ def api_supplier_link(supplier_id: str, req: SupplierLinkRequest):
         preferred=req.preferred,
         scope=req.scope,
     )
+
+
+@app.put("/api/suppliers/{supplier_id}/links/{link_id}")
+def api_supplier_update_link(supplier_id: str, link_id: str, req: SupplierLinkUpdateRequest):
+    patch = req.model_dump(exclude_unset=True)
+    for key in ("heavy_metals", "svhc", "pfas"):
+        block = patch.get(key)
+        if isinstance(block, dict):
+            patch[key] = {k: v for k, v in block.items() if v is not None}
+    return supplier_update_link(supplier_id, link_id, patch)
 
 
 @app.delete("/api/suppliers/{supplier_id}/links/{link_id}")
@@ -1071,7 +1102,10 @@ if _UI_DIST.is_dir() and (WEB_MODE or os.environ.get("INCI_PPWR_SERVE_UI", "").s
 
     @app.get("/")
     def ui_index():
-        return _FR(_UI_DIST / "index.html")
+        return _FR(
+            _UI_DIST / "index.html",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"},
+        )
 
     @app.get("/{full_path:path}")
     def ui_spa(full_path: str):
@@ -1085,4 +1119,7 @@ if _UI_DIST.is_dir() and (WEB_MODE or os.environ.get("INCI_PPWR_SERVE_UI", "").s
             raise HTTPException(404, "Not found") from e
         if candidate.is_file():
             return _FR(candidate)
-        return _FR(_UI_DIST / "index.html")
+        return _FR(
+            _UI_DIST / "index.html",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"},
+        )

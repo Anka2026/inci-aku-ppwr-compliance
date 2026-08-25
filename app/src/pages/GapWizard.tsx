@@ -194,7 +194,7 @@ export default function GapWizard() {
 
       {suggestResult && (
         <div className="detail" style={{ marginTop: "1rem" }}>
-          <h2>Öneri · form {suggestResult.form}</h2>
+          <h2>Öneri · Form {suggestResult.form}</h2>
           <p className="meta">
             {suggestResult.product_code || productCode} — benzer ürün sıklığına göre en yakın setler
           </p>
@@ -287,7 +287,7 @@ export default function GapWizard() {
           </ul>
         </div>
         <div className="detail">
-          <h2 className="section-title">Kayıtlı adaylar ({assignments.length})</h2>
+          <h2 className="section-title">Kayıtlı Adaylar ({assignments.length})</h2>
           {assignments.length === 0 && <p className="muted">Henüz aday yok.</p>}
           <table className="data-table">
             <thead>

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -42,9 +43,12 @@ export default function Login() {
 
   return (
     <div className="login-screen">
+      <ThemeToggle variant="bar" />
       <form className="login-card" onSubmit={onSubmit}>
         <img className="login-logo" src="/inci-aku-logo.png" alt="İnci Akü" />
-        <p className="eyebrow">PPWR Compliance Suite</p>
+        <p className="eyebrow" lang="en">
+          PPWR Compliance Suite
+        </p>
         <h1>Giriş</h1>
         <p className="lead">Yetkili hesabınızla giriş yapın.</p>
         <label className="block-label">

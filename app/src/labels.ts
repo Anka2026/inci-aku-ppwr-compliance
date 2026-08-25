@@ -73,6 +73,7 @@ export const ACTION_LABEL: Record<string, string> = {
   supplier_analyze: "Belge analizi",
   supplier_doc_delete: "Belge silindi",
   supplier_link: "Tedarikçi bağlandı",
+  supplier_link_update: "Bileşen beyanı",
   supplier_unlink: "Bağlantı kaldırıldı",
 };
 
@@ -114,7 +115,7 @@ export function reasonLabel(reason: string | null | undefined): string {
   const ensure = raw.match(/^ensure packs for customer\s*(.*)$/i);
   if (ensure) {
     const name = (ensure[1] || "").trim();
-    return name ? `Müşteri paketi: ${name}` : "Müşteri paketi";
+    return name ? `Müşteri Paketi: ${name}` : "Müşteri Paketi";
   }
   return raw;
 }
@@ -130,6 +131,9 @@ export const DOC_TYPE_LABEL: Record<string, string> = {
   TDS: "TDS",
   ANALYSIS: "Analiz",
   CERTIFICATE: "Sertifika",
+  HEAVY_METALS: "Ağır Metal Beyanı",
+  SVHC: "REACH / SVHC Beyanı",
+  PFAS: "PFAS Beyanı",
   OTHER: "Diğer",
 };
 
@@ -137,6 +141,49 @@ export function docTypeLabel(value: string | null | undefined): string {
   const raw = String(value || "").trim();
   if (!raw) return "—";
   return DOC_TYPE_LABEL[raw.toUpperCase()] || raw;
+}
+
+export const MATERIAL_FAMILY_LABEL: Record<string, string> = {
+  PE: "PE",
+  PP: "PP",
+  PET: "PET",
+  PAPER: "Kâğıt",
+  CARDBOARD: "Karton",
+  WOOD: "Ahşap",
+  STEEL: "Çelik",
+  MIXED: "Karışık",
+  OTHER: "Diğer",
+};
+
+export const HM_STATUS_LABEL: Record<string, string> = {
+  unknown: "Seçilmedi",
+  compliant: "Uygun (≤100 mg/kg)",
+  non_compliant: "Uygun değil",
+  no_evidence: "Kanıt yok",
+};
+
+export const SVHC_STATUS_LABEL: Record<string, string> = {
+  unknown: "Seçilmedi",
+  none: "SVHC yok",
+  present: "SVHC var",
+  no_declaration: "Beyan yok",
+};
+
+export const PFAS_STATUS_LABEL: Record<string, string> = {
+  unknown: "Seçilmedi",
+  not_added: "Kasıtlı yok",
+  present: "Var",
+  not_applicable: "Gıda teması yok (N/A)",
+};
+
+export function declStatusLabel(
+  kind: "hm" | "svhc" | "pfas",
+  value: string | null | undefined,
+): string {
+  const k = String(value || "unknown").trim().toLowerCase();
+  if (kind === "hm") return HM_STATUS_LABEL[k] || k;
+  if (kind === "svhc") return SVHC_STATUS_LABEL[k] || k;
+  return PFAS_STATUS_LABEL[k] || k;
 }
 
 export function fileKindLabel(kind: string | null | undefined): string {

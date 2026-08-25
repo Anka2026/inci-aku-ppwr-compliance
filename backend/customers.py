@@ -13,7 +13,14 @@ from pathlib import Path
 
 from fastapi import HTTPException
 
-from workspace_store import WORKSPACE, _assert_workspace, desktop_zip_drop, _safe_key, list_products
+from workspace_store import (
+    WORKSPACE,
+    _assert_workspace,
+    desktop_zip_drop,
+    finalize_customer_zip,
+    _safe_key,
+    list_products,
+)
 
 CUSTOMERS = WORKSPACE / "customers"
 
@@ -139,7 +146,13 @@ def zip_from_customer(customer_id: str, label: str | None = None) -> dict:
     if not codes:
         raise HTTPException(400, "Customer has no product codes")
     zip_label = (label or data.get("name") or "MUSTERI").strip()
-    result = desktop_zip_drop(codes=codes, label=zip_label)
+    result = desktop_zip_drop(codes=codes, label=zip_label, pack="customer")
+    zip_path = result.get("zip")
+    if zip_path:
+        pdfs = finalize_customer_zip(zip_path)
+        result["pack"] = "customer"
+        result["pdf_files"] = pdfs
+        result["note"] = "Technical File + EU DoC PDF only"
     result["customer_id"] = data.get("id")
     result["customer_name"] = data.get("name")
     return result
@@ -219,7 +232,7 @@ def ensure_customer_packs(
     bulk = bulk_create_from_codes(
         codes=codes,
         scope=scope,
-        reason=f"Müşteri paketi: {data.get('name')}",
+        reason=f"Müşteri Paketi: {data.get('name')}",
         skip_existing=True,
         skip_pdf=skip_pdf,
     )

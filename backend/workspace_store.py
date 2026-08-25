@@ -81,7 +81,7 @@ def _public_reason(reason: str) -> str:
     m = re.match(r"^ensure packs for customer\s*(.*)$", raw, re.I)
     if m:
         name = (m.group(1) or "").strip()
-        return f"Müşteri paketi: {name}" if name else "Müşteri paketi"
+        return f"Müşteri Paketi: {name}" if name else "Müşteri Paketi"
     return raw
 
 
@@ -783,14 +783,48 @@ def resolve_workspace_file(product_code: str, file_name: str, revision: str | No
     return path
 
 
+CUSTOMER_ZIP_PDFS = ("01_Technical_File", "02_EU_DoC")
+CUSTOMER_ZIP_NAMES = frozenset({"01_Technical_File.pdf", "02_EU_DoC.pdf", "_MANIFEST.json"})
+
+
+def _strip_zip_to_names(zip_path: Path, allowed_names: frozenset[str]) -> list[str]:
+    """Rewrite ZIP so only allowed basenames remain. Returns kept member paths."""
+    tmp = zip_path.with_name(zip_path.stem + ".__filter__.zip")
+    kept: list[str] = []
+    with zipfile.ZipFile(zip_path, "r") as src:
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as dst:
+            for info in src.infolist():
+                base = Path(info.filename).name
+                if base not in allowed_names:
+                    continue
+                dst.writestr(info, src.read(info.filename))
+                kept.append(info.filename)
+    os.replace(tmp, zip_path)
+    return kept
+
+
+def finalize_customer_zip(zip_path: Path) -> list[str]:
+    """Hard guarantee: customer ZIP contains only Technical File + EU DoC PDFs."""
+    kept = _strip_zip_to_names(Path(zip_path), CUSTOMER_ZIP_NAMES)
+    pdfs = [n for n in kept if n.lower().endswith(".pdf")]
+    extra = [n for n in kept if Path(n).name not in CUSTOMER_ZIP_NAMES]
+    if extra:
+        raise HTTPException(500, f"Customer ZIP leaked extra files: {extra[:8]}")
+    if any(not n.lower().endswith(".pdf") and Path(n).name != "_MANIFEST.json" for n in kept):
+        raise HTTPException(500, "Customer ZIP must be PDF-only (plus manifest)")
+    return pdfs
+
+
 def desktop_zip_drop(
     *,
     codes: list[str],
     label: str = "MULTI",
     revision_policy: str = "current",  # current = each product's current ISSUED/DRAFT
+    pack: str = "full",  # full = 4 docs × WORD+PDF; customer = Technical File + EU DoC PDFs only
 ) -> dict:
     """Build ZIP with 4-doc packs. Local → Desktop; web/Render → workspace/exports + download."""
     _ensure_ws()
+    customer_only = (pack or "full").strip().lower() == "customer"
     raw_codes = []
     for c in codes:
         for part in re.split(r"[\s,;]+", str(c or "").strip()):
@@ -810,12 +844,15 @@ def desktop_zip_drop(
     stamp = datetime.now().strftime("%Y%m%d_%H%M")
     safe_label = re.sub(r"[^\w\-]+", "_", (label or "MULTI").strip())[:40] or "MULTI"
     zip_name = f"PPWR_{safe_label}_{stamp}.zip"
+    if customer_only:
+        zip_name = f"PPWR_{safe_label}_TF_DoC_{stamp}.zip"
     out_dir = EXPORTS if WEB_MODE else DESKTOP
     out_dir.mkdir(parents=True, exist_ok=True)
     zip_path = out_dir / zip_name
 
     included = []
     missing = []
+    expected = 2 if customer_only else 8
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for key in keys:
             try:
@@ -832,18 +869,26 @@ def desktop_zip_drop(
                 missing.append({"product_code": key, "error": f"rev folder missing {rev}"})
                 continue
             pack_files = 0
-            for stem in STEMS:
-                for ext in ("docx", "pdf"):
-                    src = folder / f"{stem}.{ext}"
+            if customer_only:
+                for stem in CUSTOMER_ZIP_PDFS:
+                    src = folder / f"{stem}.pdf"
                     if src.exists() and src.stat().st_size > 200:
-                        arc = f"{key}/{rev}/{src.name}"
-                        zf.write(src, arcname=arc)
+                        zf.write(src, arcname=f"{key}/{rev}/{src.name}")
                         pack_files += 1
-            meta = folder / "meta.json"
-            if meta.exists():
-                zf.write(meta, arcname=f"{key}/{rev}/meta.json")
-            if pack_files < 8:
-                missing.append({"product_code": key, "error": f"incomplete files ({pack_files}/8)", "revision": rev})
+            else:
+                for stem in STEMS:
+                    for ext in ("docx", "pdf"):
+                        src = folder / f"{stem}.{ext}"
+                        if src.exists() and src.stat().st_size > 200:
+                            zf.write(src, arcname=f"{key}/{rev}/{src.name}")
+                            pack_files += 1
+                meta = folder / "meta.json"
+                if meta.exists():
+                    zf.write(meta, arcname=f"{key}/{rev}/meta.json")
+            if pack_files < expected:
+                missing.append(
+                    {"product_code": key, "error": f"incomplete files ({pack_files}/{expected})", "revision": rev}
+                )
             else:
                 included.append({"product_code": key, "revision": rev, "files": pack_files})
 
@@ -851,11 +896,19 @@ def desktop_zip_drop(
             "created_at": _now(),
             "label": label,
             "zip": zip_name,
+            "pack": "customer" if customer_only else "full",
             "included": included,
             "missing": missing,
-            "note": "Generated by İnci PPWR Yazılımı — workspace source of truth",
+            "note": (
+                "Customer ZIP — Technical File + EU DoC PDFs only"
+                if customer_only
+                else "Generated by İnci PPWR Yazılımı — workspace source of truth"
+            ),
         }
         zf.writestr("_MANIFEST.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+
+    if customer_only:
+        finalize_customer_zip(zip_path)
 
     # log drop
     log_path = DROPS_LOG / f"{stamp}_{safe_label}.json"
@@ -872,7 +925,7 @@ def desktop_zip_drop(
         "download_url": f"/api/workspace/zip-download?name={zip_name}",
     }
     log_activity(
-        "desktop_zip",
+        "customer_zip" if customer_only else "desktop_zip",
         label=label,
         zip=zip_name,
         count_ok=len(included),

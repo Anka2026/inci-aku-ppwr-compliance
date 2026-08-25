@@ -15,8 +15,8 @@ export default class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <p className="eyebrow">PPWR Compliance Suite</p>
-          <h1>Sayfa yüklenemedi</h1>
+          <p className="eyebrow" lang="en">PPWR Compliance Suite</p>
+          <h1>Sayfa Yüklenemedi</h1>
           <p className="lead">Sayfayı yenileyin. Sorun sürerse uygulamayı yeniden başlatın.</p>
           <p className="error">{this.state.error}</p>
           <button type="button" onClick={() => window.location.assign("/login")}>

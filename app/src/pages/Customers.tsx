@@ -148,10 +148,10 @@ export default function Customers() {
   return (
     <section>
       <p className="eyebrow">Müşteri · ZIP</p>
-      <h1>Müşteri paketi</h1>
+      <h1>Müşteri Paketi</h1>
       <p className="lead">
-        Müşteri kartına ürün kodlarını yazın. Hazırlık özeti eksikleri gösterir; ardından tam
-        paket ZIP’ini indirin. Kod listesini elle yapıştırmak için{" "}
+        Müşteri kartına ürün kodlarını yazın. ZIP yalnızca Technical File ve EU DoC PDF
+        dosyalarını içerir. Kod listesini elle yapıştırmak için{" "}
         <Link to="/drop">Paket ZIP</Link>.
       </p>
 
@@ -235,7 +235,7 @@ export default function Customers() {
 
           {coverage && (
             <div style={{ marginTop: "1rem" }}>
-              <h3 className="section-title">Hazırlık özeti</h3>
+              <h3 className="section-title">Hazırlık Özeti</h3>
               <p className="meta">
                 {coverage.ready}/{coverage.total} hazır
                 {coverage.missing ? ` · eksik ${coverage.missing}` : ""}
@@ -280,7 +280,8 @@ export default function Customers() {
           {zipResult && (
             <div className="ok" style={{ marginTop: "0.75rem" }}>
               <p>
-                ZIP hazır · OK {zipResult.count_ok} · eksik {zipResult.count_missing}
+                ZIP hazır · yalnızca Technical File + EU DoC PDF · OK {zipResult.count_ok} · eksik{" "}
+                {zipResult.count_missing}
                 {zipResult.zip_name ? ` · ${zipResult.zip_name}` : ""}
               </p>
               {(zipResult.downloadHref || zipResult.download_url) && (

@@ -2,6 +2,8 @@
 
 v1.0.0 — İnci Akü’ye özel üretim ürünü. Tüm kontrollü evraklar (Word + PDF) programın parçasıdır.
 
+Kilit 25.08.2026: güncel arayüz ve ZIP davranışı GitHub `main` üzerindedir (`git pull`).
+
 ## Giriş
 
 `admin` / `160616`

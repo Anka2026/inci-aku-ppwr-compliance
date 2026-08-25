@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api, PackFile, RecordDetail, WsProduct, WsProductDetail } from "../api";
+import { api, RecordDetail, WsProduct, WsProductDetail } from "../api";
+import FilePairList, { downloadKindLabel } from "../components/FilePairList";
 import { useLastDownload } from "../components/useLastDownload";
 import { scopeLabel, statusLabel } from "../labels";
 
@@ -101,11 +102,6 @@ export default function Search() {
     await selectFrozenKey(source as (typeof FROZEN)[number], key);
   }
 
-  function openFrozenLabel(kind: string, exists: boolean) {
-    if (!exists) return "yok";
-    return kind === "WORD" || kind === "docx" ? "OPEN WORD" : "OPEN PDF";
-  }
-
   function statusClass(status: string) {
     const s = (status || "").toUpperCase();
     if (s === "ISSUED") return "act-badge green";
@@ -117,7 +113,7 @@ export default function Search() {
   return (
     <section>
       <p className="eyebrow">Ürün · doküman</p>
-      <h1>Ürün arama</h1>
+      <h1>Ürün Arama</h1>
       <p className="lead">
         Ürün kodunu yazın; Word ve PDF dosyalarını açın veya indirin. Varsayılan kaynak revizyon
         yönetimi — resmi paketler buradadır.
@@ -210,63 +206,29 @@ export default function Search() {
               <p className="meta">
                 {wsDetail.product.current_revision} · set {wsDetail.product.set_code}
               </p>
-              <ul className="file-list">
-                {(wsDetail.current_files || []).map((f: PackFile) => (
-                  <li key={f.name}>
-                    <span>
-                      {f.stem} · {f.kind}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={!f.exists}
-                      onClick={() =>
-                        api
-                          .wsOpen(wsDetail.product.product_code, f.name)
-                          .then((r) =>
-                            capture(
-                              r.download_url,
-                              f.kind === "WORD" ? "WORD indir" : "PDF indir",
-                            ),
-                          )
-                          .catch((e) => setErr(String(e)))
-                      }
-                    >
-                      {f.exists ? (f.kind === "WORD" ? "OPEN WORD" : "OPEN PDF") : "yok"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <FilePairList
+                files={wsDetail.current_files || []}
+                onOpen={(f) =>
+                  api
+                    .wsOpen(wsDetail.product.product_code, f.name)
+                    .then((r) => capture(r.download_url, downloadKindLabel(f.kind, f.name)))
+                    .catch((e) => setErr(String(e)))
+                }
+              />
             </>
           )}
           {frozenDetail && (
             <>
               <h2>{frozenDetail.key}</h2>
-              <ul className="file-list">
-                {frozenDetail.files.map((f) => (
-                  <li key={f.name}>
-                    <span>
-                      {f.label} · {f.kind}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={!f.exists}
-                      onClick={() =>
-                        api
-                          .openFile(source, frozenDetail.key, f.name)
-                          .then((r) =>
-                            capture(
-                              r.download_url,
-                              f.kind === "WORD" ? "WORD indir" : "PDF indir",
-                            ),
-                          )
-                          .catch((e) => setErr(String(e)))
-                      }
-                    >
-                      {openFrozenLabel(f.kind, f.exists)}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <FilePairList
+                files={frozenDetail.files}
+                onOpen={(f) =>
+                  api
+                    .openFile(source, frozenDetail.key, f.name)
+                    .then((r) => capture(r.download_url, downloadKindLabel(f.kind, f.name)))
+                    .catch((e) => setErr(String(e)))
+                }
+              />
             </>
           )}
         </div>

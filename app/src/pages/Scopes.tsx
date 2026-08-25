@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, RecordDetail, ScopeInfo } from "../api";
+import FilePairList, { downloadKindLabel } from "../components/FilePairList";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
 import { scopeLabel } from "../labels";
@@ -44,11 +45,6 @@ const DOC_FAMILY = [
 
 function fmt(n: number) {
   return new Intl.NumberFormat("tr-TR").format(n);
-}
-
-function openLabel(kind: string, exists: boolean) {
-  if (!exists) return "yok";
-  return kind === "WORD" ? "OPEN WORD" : "OPEN PDF";
 }
 
 export default function Scopes() {
@@ -170,7 +166,7 @@ export default function Scopes() {
     return (
       <section>
         <p className="eyebrow">Doküman Merkezi</p>
-        <h1>Kapsam bulunamadı</h1>
+        <h1>Kapsam Bulunamadı</h1>
         <p className="lead">
           <code>{scopeKey}</code> geçerli değil.{" "}
           <Link to="/scopes">Doküman Merkezi’ne dön</Link>
@@ -271,7 +267,7 @@ export default function Scopes() {
         <LastDownloadBar />
 
         <div className="section-head" style={{ marginTop: "1.5rem" }}>
-          <h2>Doküman ailesi</h2>
+          <h2>Doküman Ailesi</h2>
           <span className="muted">{totalKeys} sonuç</span>
         </div>
         <form className="search-bar" onSubmit={onLocalSearch}>
@@ -287,7 +283,7 @@ export default function Scopes() {
           <div>
             {recents.length > 0 && (
               <div style={{ marginBottom: "0.75rem" }}>
-                <h3 className="section-title">Son bakılan</h3>
+                <h3 className="section-title">Son Bakılan</h3>
                 <div className="customer-chips">
                   {recents.map((k) => (
                     <button key={k} type="button" onClick={() => void loadRecord(selected.key, k)}>
@@ -328,38 +324,19 @@ export default function Scopes() {
                   Kapsam: {scopeLabel(detail.scope)}
                   {docFilter ? ` · filtre ${docFilter}` : ""}
                 </p>
-                <ul className="file-list">
-                  {detail.files
-                    .filter((f) => !docFilter || f.name.startsWith(docFilter))
-                    .map((f) => (
-                      <li key={f.name}>
-                        <span>
-                          {f.label} · {f.kind}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={!f.exists}
-                          onClick={() => {
-                            setOkMsg("");
-                            api
-                              .openFile(selected.key, detail.key, f.name)
-                              .then((r) => {
-                                capture(
-                                  r.download_url,
-                                  f.kind === "WORD" ? "WORD indir" : "PDF indir",
-                                );
-                                setOkMsg(
-                                  `${f.kind === "WORD" ? "OPEN WORD" : "OPEN PDF"} · ${f.label}`,
-                                );
-                              })
-                              .catch((e) => setErr(String(e)));
-                          }}
-                        >
-                          {openLabel(f.kind, f.exists)}
-                        </button>
-                      </li>
-                    ))}
-                </ul>
+                <FilePairList
+                  files={detail.files.filter((f) => !docFilter || f.name.startsWith(docFilter))}
+                  onOpen={(f) => {
+                    setOkMsg("");
+                    api
+                      .openFile(selected.key, detail.key, f.name)
+                      .then((r) => {
+                        capture(r.download_url, downloadKindLabel(f.kind, f.name));
+                        setOkMsg(`${f.kind === "WORD" ? "WORD" : "PDF"} · ${f.label}`);
+                      })
+                      .catch((e) => setErr(String(e)));
+                  }}
+                />
               </>
             )}
           </div>

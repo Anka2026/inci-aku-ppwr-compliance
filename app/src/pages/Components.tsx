@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
-import { coverageLabel } from "../labels";
+import { coverageLabel, declStatusLabel, MATERIAL_FAMILY_LABEL } from "../labels";
 
 type MatrixRow = {
   component_code: string;
@@ -18,6 +18,10 @@ type MatrixRow = {
     preferred: boolean;
     has_tds: boolean;
     readiness: string;
+    material_family?: string;
+    heavy_metals_status?: string;
+    svhc_status?: string;
+    pfas_status?: string;
   }[];
 };
 
@@ -69,7 +73,7 @@ export default function Components() {
   return (
     <section>
       <p className="eyebrow">Bileşen · tedarikçi kapsamı</p>
-      <h1>Bileşen matrisi</h1>
+      <h1>Bileşen Matrisi</h1>
       <p className="lead">
         Ambalaj bileşeninin tedarikçisi var mı, TDS yüklü mü? Detay:{" "}
         <Link to="/suppliers">Tedarikçi</Link> · set: <Link to="/bom">Ambalaj BOM</Link>.
@@ -173,6 +177,12 @@ export default function Components() {
                         · {coverageLabel(s.readiness)}
                         {s.preferred ? " · tercih" : ""}
                         {s.has_tds ? " · TDS var" : " · TDS yok"}
+                        {s.material_family
+                          ? ` · ${MATERIAL_FAMILY_LABEL[s.material_family] || s.material_family}`
+                          : ""}
+                        {` · ağır metal ${declStatusLabel("hm", s.heavy_metals_status)}`}
+                        {` · SVHC ${declStatusLabel("svhc", s.svhc_status)}`}
+                        {` · PFAS ${declStatusLabel("pfas", s.pfas_status)}`}
                       </span>
                     </li>
                   ))}

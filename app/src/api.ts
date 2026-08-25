@@ -240,6 +240,8 @@ export type DesktopDropResult = {
   download_url?: string;
   zip_name?: string;
   downloadHref?: string;
+  pack?: string;
+  note?: string;
 };
 
 export type CustomerCard = {
@@ -290,6 +292,15 @@ export type SupplierCard = {
   updated_at?: string;
 };
 
+export type SubstanceDecl = {
+  status?: string;
+  evidence_date?: string;
+  evidence_doc_id?: string;
+  note?: string;
+  substance_name?: string;
+  candidate_list_date?: string;
+};
+
 export type SupplierLink = {
   id: string;
   component_code: string;
@@ -299,6 +310,13 @@ export type SupplierLink = {
   preferred?: boolean;
   scope?: string;
   linked_at?: string;
+  updated_at?: string;
+  material_family?: string;
+  recycled_content_pct?: number | null;
+  recyclability_note?: string;
+  heavy_metals?: SubstanceDecl;
+  svhc?: SubstanceDecl;
+  pfas?: SubstanceDecl;
 };
 
 export type SupplierDocument = {
@@ -896,6 +914,10 @@ export const api = {
           preferred: boolean;
           has_tds: boolean;
           readiness: string;
+          material_family?: string;
+          heavy_metals_status?: string;
+          svhc_status?: string;
+          pfas_status?: string;
         }[];
       }[];
     }>(
@@ -924,6 +946,28 @@ export const api = {
     j<{ deleted: string }>(
       `/api/suppliers/${encodeURIComponent(id)}/links/${encodeURIComponent(linkId)}`,
       { method: "DELETE" },
+    ),
+  suppliersUpdateLink: (
+    id: string,
+    linkId: string,
+    body: {
+      preferred?: boolean;
+      note?: string;
+      material_family?: string;
+      recycled_content_pct?: number | null;
+      recyclability_note?: string;
+      heavy_metals?: SubstanceDecl;
+      svhc?: SubstanceDecl;
+      pfas?: SubstanceDecl;
+    },
+  ) =>
+    j<{ link: SupplierLink; supplier: SupplierCard & { links: SupplierLink[] } }>(
+      `/api/suppliers/${encodeURIComponent(id)}/links/${encodeURIComponent(linkId)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
     ),
   componentSuppliers: (componentCode: string) =>
     j<{

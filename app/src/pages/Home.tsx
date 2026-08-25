@@ -40,32 +40,16 @@ const SCOPE_META: Record<string, { title: string; blurb: string; tone: string }>
 
 export default function Home() {
   const navigate = useNavigate();
-  const [ok, setOk] = useState(false);
-  const [version, setVersion] = useState("");
-  const [starterProducts, setStarterProducts] = useState<number | null>(null);
   const [starterSets, setStarterSets] = useState<number | null>(null);
-  const [industrialProducts, setIndustrialProducts] = useState<number | null>(null);
   const [dataRequired, setDataRequired] = useState<number | null>(null);
-  const [wsProducts, setWsProducts] = useState<number | null>(null);
-  const [wsIssued, setWsIssued] = useState<number | null>(null);
   const [scopes, setScopes] = useState<ScopeInfo[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
     api
-      .health()
-      .then((h) => {
-        setOk(h.ok);
-        setVersion(h.version || "");
-      })
-      .catch(() => setOk(false));
-
-    api
       .mastersSummary()
       .then((s) => {
-        setStarterProducts(s.starter?.products ?? null);
         setStarterSets(s.starter?.unique_sets ?? null);
-        setIndustrialProducts(s.industrial?.products ?? null);
       })
       .catch(() => undefined);
 
@@ -80,66 +64,10 @@ export default function Home() {
       .catch(() => setDataRequired(null));
 
     api
-      .wsStatus()
-      .then((s) => {
-        setWsProducts(s.products);
-        setWsIssued(s.issued);
-      })
-      .catch(() => undefined);
-
-    api
       .wsActivity(12)
       .then((a) => setEvents(a.events))
       .catch(() => setEvents([]));
   }, []);
-
-  const quick = useMemo(
-    () => [
-      {
-        to: "/search",
-        title: "Ürün Arama",
-        desc: "Ürün kodu ile dokümanları bulun",
-        ico: "⌕",
-        tone: "",
-      },
-      {
-        to: "/bom",
-        title: "Ambalaj BOM",
-        desc: "Set kodu ile bileşen listesini açın",
-        ico: "≡",
-        tone: "purple",
-      },
-      {
-        to: "/scopes",
-        title: "Doküman Merkezi",
-        desc: "Teknik dosya, beyan, etiket ve sevkiyat",
-        ico: "▤",
-        tone: "green",
-      },
-      {
-        to: "/gaps",
-        title: "Eksik Veri",
-        desc: "Eksik ambalaj setini belirleyin",
-        ico: "!",
-        tone: "amber",
-      },
-      {
-        to: "/workspace",
-        title: "Revizyon Yönetimi",
-        desc: "Revizyon, yayın ve tam paket",
-        ico: "↻",
-        tone: "",
-      },
-      {
-        to: "/customers",
-        title: "Müşteri Paketi",
-        desc: "Kart, hazırlık özeti ve ZIP",
-        ico: "▦",
-        tone: "purple",
-      },
-    ],
-    [],
-  );
 
   const orderedScopes = useMemo(() => {
     const order = ["starter", "industrial", "container", "component"];
@@ -150,29 +78,10 @@ export default function Home() {
 
   return (
     <section>
-      <div className="hero-panel">
-        <div className="hero-copy">
-          <img className="hero-brand-logo" src="/inci-aku-logo.png" alt="İnci Akü" />
-          <p className="eyebrow">PPWR Compliance Suite</p>
-          <h1>PPWR Compliance Suite</h1>
-          <p className="lead">
-            Ambalaj uygunluğu, teknik dosya ailesi ve ürün bazlı izlenebilirlik — tek platformda.
-          </p>
-          <div className="scope-row">
-            <span className="badge">
-              STARTER <strong>{fmtNum(starterProducts)}</strong> ürün
-            </span>
-            <span className="badge">
-              INDUSTRIAL <strong>{fmtNum(industrialProducts)}</strong> ürün
-            </span>
-            <span className="badge">
-              Revizyon <strong>{fmtNum(wsProducts)}</strong> · yayınlandı {fmtNum(wsIssued)}
-            </span>
-          </div>
-        </div>
-        <div className="hero-visual" aria-hidden>
-          <img src="/hero-battery.png" alt="" />
-        </div>
+      <div className="hero-strip" aria-hidden>
+        <img className="hero-shot" src="/hero-battery.png" alt="" />
+        <img className="hero-shot" src="/hero-battery-close.png" alt="" />
+        <img className="hero-shot" src="/hero-pack-still.png" alt="" />
       </div>
 
       <div className="section-head">
@@ -202,12 +111,7 @@ export default function Home() {
         })}
       </div>
 
-      <div className="kpi-row">
-        <button type="button" className="kpi kpi-btn" onClick={() => navigate("/master")}>
-          <div className="kpi-label">Kontrollü ürünler</div>
-          <strong>{fmtNum(starterProducts)}</strong>
-          <span>Starter master kapsamı</span>
-        </button>
+      <div className="kpi-row kpi-row-2">
         <button type="button" className="kpi kpi-btn accent-purple" onClick={() => navigate("/bom")}>
           <div className="kpi-label">Ambalaj setleri</div>
           <strong>{fmtNum(starterSets)}</strong>
@@ -222,40 +126,10 @@ export default function Home() {
           <strong>{fmtNum(dataRequired)}</strong>
           <span>Kapatılması gereken kayıt</span>
         </button>
-        <button
-          type="button"
-          className={`kpi kpi-btn ${ok ? "pass" : "warn"}`}
-          onClick={() => navigate("/workspace")}
-        >
-          <div className="kpi-label">Sistem</div>
-          <strong>{ok ? "Hazır" : "Bağlantı yok"}</strong>
-          <span>
-            {ok ? "Sistem çalışıyor" : "Yeniden deneyin"}
-            {version ? ` · v${version}` : ""}
-          </span>
-        </button>
       </div>
 
       <div className="section-head">
-        <h2>Hızlı erişim</h2>
-        <Link to="/workspace">Revizyon →</Link>
-      </div>
-      <div className="quick-grid">
-        {quick.map((item) => (
-          <Link key={item.to} to={item.to} className="quick-card">
-            <span className={`quick-ico ${item.tone}`}>{item.ico}</span>
-            <div>
-              <h3>{item.title}</h3>
-              <p>{item.desc}</p>
-            </div>
-            <span className="quick-chevron">›</span>
-          </Link>
-        ))}
-      </div>
-
-      <div className="section-head">
-        <h2>Doküman ailesi</h2>
-        <Link to="/scopes">Doküman Merkezi →</Link>
+        <h2>Doküman Ailesi</h2>
       </div>
       <div className="doc-strip">
         <Link className="doc-chip" to="/scopes/starter?doc=01">
@@ -278,7 +152,7 @@ export default function Home() {
 
       <div className="panel">
         <div className="section-head">
-          <h2>Son işlemler</h2>
+          <h2>Son İşlemler</h2>
           <Link to="/workspace">Revizyon →</Link>
         </div>
         {events.length === 0 ? (

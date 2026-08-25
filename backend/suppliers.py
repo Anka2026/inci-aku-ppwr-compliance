@@ -19,8 +19,13 @@ from workspace_store import WORKSPACE, _assert_workspace, log_activity
 
 SUPPLIERS = WORKSPACE / "suppliers"
 
-DOC_TYPES = ("TDS", "ANALYSIS", "CERTIFICATE", "OTHER")
+DOC_TYPES = ("TDS", "ANALYSIS", "CERTIFICATE", "HEAVY_METALS", "SVHC", "PFAS", "OTHER")
 ALLOWED_EXT = {".pdf", ".docx", ".doc", ".xlsx", ".xls", ".txt"}
+
+MATERIAL_FAMILIES = ("", "PE", "PP", "PET", "PAPER", "CARDBOARD", "WOOD", "STEEL", "MIXED", "OTHER")
+HM_STATUSES = ("unknown", "compliant", "non_compliant", "no_evidence")
+SVHC_STATUSES = ("unknown", "none", "present", "no_declaration")
+PFAS_STATUSES = ("unknown", "not_added", "present", "not_applicable")
 
 PPWR_KEYWORDS = [
     ("recycled", "recycled_content"),
@@ -53,6 +58,9 @@ PPWR_KEYWORDS = [
     ("heavy metal", "heavy_metals"),
     ("ağır metal", "heavy_metals"),
     ("agir metal", "heavy_metals"),
+    ("pfas", "pfas"),
+    ("svhc", "svhc"),
+    ("reach", "reach"),
     ("substance", "substances"),
     ("madde", "substances"),
     ("density", "density"),
@@ -62,6 +70,43 @@ PPWR_KEYWORDS = [
     ("kalınlık", "kalinlik"),
     ("kalinlik", "kalinlik"),
 ]
+
+
+def _clean_decl(raw: object, allowed: tuple[str, ...], extra_keys: tuple[str, ...] = ()) -> dict:
+    src = raw if isinstance(raw, dict) else {}
+    status = str(src.get("status") or "unknown").strip().lower()
+    if status not in allowed:
+        status = "unknown"
+    out = {
+        "status": status,
+        "evidence_date": str(src.get("evidence_date") or "").strip()[:32],
+        "evidence_doc_id": str(src.get("evidence_doc_id") or "").strip()[:80],
+        "note": str(src.get("note") or "").strip()[:500],
+    }
+    for key in extra_keys:
+        out[key] = str(src.get(key) or "").strip()[:200]
+    return out
+
+
+def normalize_link(link: dict) -> dict:
+    """Fill PPWR declaration fields on a component–supplier link. Never writes TF/DoC."""
+    row = dict(link or {})
+    family = str(row.get("material_family") or "").strip().upper()
+    row["material_family"] = family if family in MATERIAL_FAMILIES else ""
+    row["heavy_metals"] = _clean_decl(row.get("heavy_metals"), HM_STATUSES)
+    row["svhc"] = _clean_decl(
+        row.get("svhc"),
+        SVHC_STATUSES,
+        extra_keys=("substance_name", "candidate_list_date"),
+    )
+    row["pfas"] = _clean_decl(row.get("pfas"), PFAS_STATUSES)
+    pct = row.get("recycled_content_pct")
+    try:
+        row["recycled_content_pct"] = None if pct in (None, "") else float(pct)
+    except (TypeError, ValueError):
+        row["recycled_content_pct"] = None
+    row["recyclability_note"] = str(row.get("recyclability_note") or "").strip()[:500]
+    return row
 
 
 def _now() -> str:
@@ -541,7 +586,7 @@ def list_links(supplier_id: str) -> dict:
     if not path.exists():
         return {"supplier_id": supplier_id, "links": []}
     data = json.loads(path.read_text(encoding="utf-8"))
-    links = list(data.get("links") or [])
+    links = [normalize_link(l) for l in (data.get("links") or [])]
     links.sort(key=lambda x: (x.get("component_code") or "").lower())
     return {"supplier_id": supplier_id, "links": links}
 
@@ -609,6 +654,8 @@ def link_component(
         }
         links.append(link)
 
+    links = [normalize_link(l) for l in links]
+    link = next(l for l in links if (l.get("component_code") or "").upper() == code.upper())
     _save_links(supplier_id, links)
     log_activity("supplier_link", supplier_id=supplier_id, component_code=code)
     return {"link": link, "supplier": get_supplier(supplier_id)}
@@ -625,6 +672,44 @@ def unlink_component(supplier_id: str, link_id: str) -> dict:
     _save_links(supplier_id, kept)
     log_activity("supplier_unlink", supplier_id=supplier_id, link_id=link_id)
     return {"deleted": link_id, "supplier": get_supplier(supplier_id)}
+
+
+def update_link(supplier_id: str, link_id: str, patch: dict) -> dict:
+    """Update PPWR declaration fields on a component link. Does not touch TF/DoC files."""
+    links = list_links(supplier_id).get("links") or []
+    found = next((l for l in links if l.get("id") == link_id), None)
+    if not found:
+        found = next((l for l in links if (l.get("component_code") or "") == link_id), None)
+    if not found:
+        raise HTTPException(404, "Link not found")
+    src = patch or {}
+    if "preferred" in src and src["preferred"] is not None:
+        found["preferred"] = bool(src["preferred"])
+    if "note" in src and src["note"] is not None:
+        found["note"] = str(src["note"]).strip()[:500]
+    if "material_family" in src and src["material_family"] is not None:
+        found["material_family"] = src["material_family"]
+    if "recyclability_note" in src and src["recyclability_note"] is not None:
+        found["recyclability_note"] = src["recyclability_note"]
+    if "recycled_content_pct" in src:
+        found["recycled_content_pct"] = src["recycled_content_pct"]
+    if isinstance(src.get("heavy_metals"), dict):
+        found["heavy_metals"] = {**(found.get("heavy_metals") or {}), **src["heavy_metals"]}
+    if isinstance(src.get("svhc"), dict):
+        found["svhc"] = {**(found.get("svhc") or {}), **src["svhc"]}
+    if isinstance(src.get("pfas"), dict):
+        found["pfas"] = {**(found.get("pfas") or {}), **src["pfas"]}
+    found["updated_at"] = _now()
+    links = [normalize_link(l) if l.get("id") != found.get("id") else normalize_link(found) for l in links]
+    saved = next(l for l in links if l.get("id") == found.get("id"))
+    _save_links(supplier_id, links)
+    log_activity(
+        "supplier_link_update",
+        supplier_id=supplier_id,
+        component_code=saved.get("component_code"),
+        link_id=saved.get("id"),
+    )
+    return {"link": saved, "supplier": get_supplier(supplier_id)}
 
 
 def suppliers_for_component(component_code: str) -> dict:
@@ -653,6 +738,10 @@ def suppliers_for_component(component_code: str) -> dict:
                         "has_tds": summary["has_tds"],
                         "has_analysis": summary["has_analysis"],
                         "readiness": summary["readiness"],
+                        "material_family": link.get("material_family") or "",
+                        "heavy_metals_status": (link.get("heavy_metals") or {}).get("status") or "unknown",
+                        "svhc_status": (link.get("svhc") or {}).get("status") or "unknown",
+                        "pfas_status": (link.get("pfas") or {}).get("status") or "unknown",
                     }
                 )
     hits.sort(key=lambda x: (not x["preferred"], (x.get("supplier_name") or "").lower()))
@@ -684,6 +773,10 @@ def _all_link_index() -> dict[str, list[dict]]:
                     "has_analysis": summary["has_analysis"],
                     "readiness": summary["readiness"],
                     "set_code": link.get("set_code") or "",
+                    "material_family": link.get("material_family") or "",
+                    "heavy_metals_status": (link.get("heavy_metals") or {}).get("status") or "unknown",
+                    "svhc_status": (link.get("svhc") or {}).get("status") or "unknown",
+                    "pfas_status": (link.get("pfas") or {}).get("status") or "unknown",
                 }
             )
     for code in index:

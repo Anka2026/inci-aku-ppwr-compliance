@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, WsProduct, WsProductDetail } from "../api";
+import FilePairList, { downloadKindLabel } from "../components/FilePairList";
 import { useLastDownload } from "../components/useLastDownload";
 import { isWebMode } from "../runtime";
 import { reasonLabel, SCOPE_OPTIONS, statusLabel } from "../labels";
@@ -418,36 +419,15 @@ export default function Workspace() {
 
               <h3 className="section-title">Dosyalar ({viewRev || "güncel"})</h3>
               <LastDownloadBar />
-              <ul className="file-list">
-                {(files || []).map((f) => (
-                  <li key={f.name}>
-                    <span>
-                      {f.stem} · {f.kind}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={!f.exists}
-                      onClick={() =>
-                        api
-                          .wsOpen(selected.product.product_code, f.name, viewRev || undefined)
-                          .then((r) =>
-                            capture(
-                              r.download_url,
-                              f.kind === "WORD" || f.kind === "docx" ? "WORD indir" : "PDF indir",
-                            ),
-                          )
-                          .catch((e) => setErr(String(e)))
-                      }
-                    >
-                      {f.exists
-                        ? f.kind === "WORD" || f.kind === "docx"
-                          ? "OPEN WORD"
-                          : "OPEN PDF"
-                        : "yok"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <FilePairList
+                files={files || []}
+                onOpen={(f) =>
+                  api
+                    .wsOpen(selected.product.product_code, f.name, viewRev || undefined)
+                    .then((r) => capture(r.download_url, downloadKindLabel(f.kind, f.name)))
+                    .catch((e) => setErr(String(e)))
+                }
+              />
               {selected.product.status === "DRAFT" ||
               (files || []).some((f) => !f.exists) ? (
                 <button

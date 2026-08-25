@@ -18,6 +18,7 @@ import Users from "./pages/Users";
 import Workspace from "./pages/Workspace";
 import { api, AuthUser } from "./api";
 import AccountPassword from "./components/AccountPassword";
+import ThemeToggle from "./components/ThemeToggle";
 
 const links: { to: string; label: string; ico: string; end?: boolean }[] = [
   { to: "/", label: "Ana Sayfa", ico: "⌂", end: true },
@@ -184,6 +185,7 @@ export default function App() {
                 aria-label="Ürün kodu ara"
               />
               <button type="submit">Ara</button>
+              <ThemeToggle variant="bar" />
             </form>
             <div className="topbar-actions">
               <button
