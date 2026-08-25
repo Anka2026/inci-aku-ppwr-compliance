@@ -2,7 +2,7 @@
 
 **Satış sürümü: v1.0.0** — demo değil, üretim ürünü.
 
-**Kilit: 25.08.2026** — açık/koyu tema, tedarikçi PPWR beyanı, müşteri ZIP (yalnızca Technical File + EU DoC PDF) ve ana sayfa foto şeridi bu GitHub kopyasında donduruldu. Arkadaşlar `git pull` ile alır.
+**Kilit: 25.08.2026** — açık/koyu tema, tedarikçi PPWR beyanı, müşteri ZIP (yalnızca Technical File + EU DoC PDF), ana sayfa foto şeridi; **Eksik Veri** menüsü kaldırıldı. Arkadaşlar `git pull` ile alır.
 
 Kontrollü PPWR delivery setleri (salt-okunur) + Workspace source of truth + müşteri ZIP teslimatı.
 

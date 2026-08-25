@@ -41,7 +41,6 @@ const SCOPE_META: Record<string, { title: string; blurb: string; tone: string }>
 export default function Home() {
   const navigate = useNavigate();
   const [starterSets, setStarterSets] = useState<number | null>(null);
-  const [dataRequired, setDataRequired] = useState<number | null>(null);
   const [scopes, setScopes] = useState<ScopeInfo[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
 
@@ -57,11 +56,6 @@ export default function Home() {
       .scopes()
       .then((r) => setScopes(r.scopes))
       .catch(() => undefined);
-
-    api
-      .gapsScan("starter", 500)
-      .then((g) => setDataRequired(g.count ?? g.gaps?.length ?? 0))
-      .catch(() => setDataRequired(null));
 
     api
       .wsActivity(12)
@@ -116,15 +110,6 @@ export default function Home() {
           <div className="kpi-label">Ambalaj setleri</div>
           <strong>{fmtNum(starterSets)}</strong>
           <span>Starter fiziksel setler</span>
-        </button>
-        <button
-          type="button"
-          className={`kpi kpi-btn ${dataRequired && dataRequired > 0 ? "warn" : ""}`}
-          onClick={() => navigate("/gaps")}
-        >
-          <div className="kpi-label">Eksik Veri</div>
-          <strong>{fmtNum(dataRequired)}</strong>
-          <span>Kapatılması gereken kayıt</span>
         </button>
       </div>
 

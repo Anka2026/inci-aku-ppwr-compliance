@@ -253,10 +253,7 @@ export default function PackBuilder() {
           {busy ? "Üretiliyor…" : "Paket üret"}
         </button>
       </form>
-      <p className="meta">
-        Master ürün kodu girerseniz açıklama ve set boş kalabilir. Set önerisi için{" "}
-        <Link to="/gaps">Eksik Veri</Link>.
-      </p>
+      <p className="meta">Master ürün kodu girerseniz açıklama ve set boş kalabilir.</p>
 
       {err && <p className="error">{err}</p>}
       {okMsg && <p className="ok">{okMsg}</p>}
@@ -352,8 +349,6 @@ export default function PackBuilder() {
                 <Link to={`/search?q=${encodeURIComponent(selected.product_code)}&source=workspace`}>
                   Ara
                 </Link>
-                {" · "}
-                <Link to={`/gaps`}>Eksik Veri</Link>
               </p>
               <dl className="facts">
                 <div>

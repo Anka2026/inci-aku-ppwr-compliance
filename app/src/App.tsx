@@ -5,7 +5,6 @@ import Bom from "./pages/Bom";
 import Components from "./pages/Components";
 import Customers from "./pages/Customers";
 import DesktopDrop from "./pages/DesktopDrop";
-import GapWizard from "./pages/GapWizard";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Master from "./pages/Master";
@@ -28,7 +27,6 @@ const links: { to: string; label: string; ico: string; end?: boolean }[] = [
   { to: "/suppliers", label: "Tedarikçi", ico: "◎" },
   { to: "/components", label: "Bileşen Matrisi", ico: "⬡" },
   { to: "/scopes", label: "Doküman Merkezi", ico: "▤" },
-  { to: "/gaps", label: "Eksik Veri", ico: "!" },
   { to: "/master", label: "Master Veri", ico: "☰" },
   { to: "/bom", label: "Ambalaj BOM", ico: "≡" },
   { to: "/drop", label: "Paket ZIP", ico: "↓" },
@@ -237,7 +235,7 @@ export default function App() {
               <Route path="/master" element={<Master />} />
               <Route path="/bom" element={<Bom />} />
               <Route path="/bom/:setCode" element={<Bom />} />
-              <Route path="/gaps" element={<GapWizard />} />
+              <Route path="/gaps" element={<Navigate to="/" replace />} />
               <Route path="/dil-foto" element={<Pipeline />} />
               <Route path="/pipeline" element={<Navigate to="/dil-foto" replace />} />
               <Route path="/packs" element={<PackBuilder />} />

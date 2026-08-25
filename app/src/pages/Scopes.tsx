@@ -252,11 +252,6 @@ export default function Scopes() {
               Ambalaj BOM
             </button>
           )}
-          {selected.key === "starter" && (
-            <button type="button" onClick={() => navigate("/gaps")}>
-              Eksik Veri
-            </button>
-          )}
           <button type="button" className="btn-ghost" onClick={() => navigate("/scopes")}>
             Tüm kapsamlar
           </button>
