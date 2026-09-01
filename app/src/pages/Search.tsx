@@ -10,7 +10,7 @@ type Source = "workspace" | (typeof FROZEN)[number];
 
 export default function Search() {
   const [params] = useSearchParams();
-  const [source, setSource] = useState<Source>("workspace");
+  const [source, setSource] = useState<Source>("starter");
   const [q, setQ] = useState(() => params.get("q") || "");
   const [wsHits, setWsHits] = useState<WsProduct[]>([]);
   const [frozenKeys, setFrozenKeys] = useState<string[]>([]);
@@ -35,8 +35,7 @@ export default function Search() {
         if (r.products[0]) {
           void selectWs(r.products[0].product_code);
         }
-        // Product code often lives in frozen starter; fall through if empty.
-        if (query.trim() && r.total === 0) {
+        if (r.total === 0) {
           const fr = await api.keys("starter", query);
           if (fr.total > 0) {
             setSource("starter");
@@ -115,8 +114,8 @@ export default function Search() {
       <p className="eyebrow">Ürün · doküman</p>
       <h1>Ürün Arama</h1>
       <p className="lead">
-        Ürün kodunu yazın; Word ve PDF dosyalarını açın veya indirin. Varsayılan kaynak revizyon
-        yönetimi — resmi paketler buradadır.
+        Ürün kodunu yazın; Word ve PDF dosyalarını açın veya indirin. Varsayılan kaynak resmi
+        Starter paketleridir — revizyon yönetimi ayrı menüdedir.
       </p>
       <form className="search-bar" onSubmit={onSearch}>
         <select value={source} onChange={(e) => setSource(e.target.value as Source)}>

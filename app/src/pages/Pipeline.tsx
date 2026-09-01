@@ -36,6 +36,8 @@ export default function Pipeline() {
     } catch {
       setRecents([]);
     }
+    void onPreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function pushRecent(code: string) {

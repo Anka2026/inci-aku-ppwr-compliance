@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, CustomerCard, CustomerCoverage, DesktopDropResult } from "../api";
 import DownloadLink from "../components/DownloadLink";
@@ -23,6 +23,7 @@ export default function Customers() {
   const [busy, setBusy] = useState(false);
   const [zipResult, setZipResult] = useState<DesktopDropResult | null>(null);
   const [coverage, setCoverage] = useState<CustomerCoverage | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const web = isWebMode();
 
   async function refresh() {
@@ -70,6 +71,13 @@ export default function Customers() {
     setNote("");
     setZipResult(null);
     setCoverage(null);
+  }
+
+  function startNew() {
+    clearForm();
+    setErr("");
+    setOkMsg("Yeni kart — müşteri adı ve ürün kodlarını yazıp Kaydet’e basın.");
+    window.setTimeout(() => nameRef.current?.focus(), 0);
   }
 
   async function onSave(e: FormEvent) {
@@ -187,7 +195,12 @@ export default function Customers() {
               </li>
             )}
           </ul>
-          <button type="button" style={{ marginTop: "0.75rem" }} onClick={clearForm}>
+          <button
+            type="button"
+            className={!selectedId ? "picked-rev" : ""}
+            style={{ marginTop: "0.75rem" }}
+            onClick={startNew}
+          >
             Yeni kart
           </button>
         </div>
@@ -196,7 +209,14 @@ export default function Customers() {
           <form onSubmit={onSave}>
             <label className="block-label">
               Müşteri adı
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
+              <input
+                ref={nameRef}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                minLength={2}
+                autoComplete="off"
+              />
             </label>
             <label className="block-label">
               Ürün kodları

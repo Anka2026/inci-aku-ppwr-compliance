@@ -153,6 +153,10 @@ def _resolve_data_path(raw: str, *, fallbacks: list[Path] | None = None) -> Path
     return p
 
 
+def _delivery_has_scopes(root: Path, scopes: dict) -> bool:
+    return any((root / folder).is_dir() for folder in (scopes or {}).values())
+
+
 def load_config() -> dict:
     data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     env_root = os.environ.get("INCI_PPWR_DELIVERY_ROOT")
@@ -161,15 +165,23 @@ def load_config() -> dict:
     env_cand = os.environ.get("INCI_PPWR_CANDIDATES_ROOT")
     if env_cand:
         data["candidatesRoot"] = env_cand
-    data["deliveryRoot"] = str(
-        _resolve_data_path(
-            str(data.get("deliveryRoot") or "delivery"),
-            fallbacks=[
-                ROOT / "delivery",
-                Path(r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"),
-            ],
-        )
+    scopes = data.get("scopes") or {}
+    configured = _resolve_data_path(
+        str(data.get("deliveryRoot") or "delivery"),
+        fallbacks=[
+            ROOT / "delivery",
+            Path(r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"),
+        ],
     )
+    if not _delivery_has_scopes(configured, scopes):
+        for alt in (
+            ROOT / "delivery",
+            Path(r"C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"),
+        ):
+            if _delivery_has_scopes(alt, scopes):
+                configured = alt.resolve()
+                break
+    data["deliveryRoot"] = str(configured)
     data["candidatesRoot"] = str(
         _resolve_data_path(str(data.get("candidatesRoot") or "candidates"), fallbacks=[ROOT / "candidates"])
     )
@@ -371,6 +383,15 @@ class CustomerEnsureRequest(BaseModel):
     label: str | None = None
 
 
+class SupplierDeclPatch(BaseModel):
+    status: str | None = None
+    evidence_date: str | None = None
+    evidence_doc_id: str | None = None
+    note: str | None = None
+    substance_name: str | None = None
+    candidate_list_date: str | None = None
+
+
 class SupplierSaveRequest(BaseModel):
     name: str
     code: str = ""
@@ -380,6 +401,12 @@ class SupplierSaveRequest(BaseModel):
     note: str = ""
     contact: str = ""
     materials: str = ""
+    material_family: str = ""
+    recycled_content_pct: float | None = None
+    recyclability_note: str = ""
+    heavy_metals: SupplierDeclPatch | None = None
+    svhc: SupplierDeclPatch | None = None
+    pfas: SupplierDeclPatch | None = None
     id: str | None = None
 
 
@@ -390,15 +417,6 @@ class SupplierLinkRequest(BaseModel):
     note: str = ""
     preferred: bool = False
     scope: str = "starter"
-
-
-class SupplierDeclPatch(BaseModel):
-    status: str | None = None
-    evidence_date: str | None = None
-    evidence_doc_id: str | None = None
-    note: str | None = None
-    substance_name: str | None = None
-    candidate_list_date: str | None = None
 
 
 class SupplierLinkUpdateRequest(BaseModel):
@@ -440,6 +458,12 @@ def api_supplier_save(req: SupplierSaveRequest):
         note=req.note,
         contact=req.contact,
         materials=req.materials,
+        material_family=req.material_family,
+        recycled_content_pct=req.recycled_content_pct,
+        recyclability_note=req.recyclability_note,
+        heavy_metals=req.heavy_metals.model_dump() if req.heavy_metals else None,
+        svhc=req.svhc.model_dump() if req.svhc else None,
+        pfas=req.pfas.model_dump() if req.pfas else None,
         supplier_id=req.id,
     )
 

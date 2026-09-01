@@ -28,7 +28,7 @@ type MatrixRow = {
 export default function Components() {
   const [searchParams] = useSearchParams();
   const [q, setQ] = useState(() => searchParams.get("q") || "");
-  const [linkedOnly, setLinkedOnly] = useState(true);
+  const [linkedOnly, setLinkedOnly] = useState(false);
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [linkedTotal, setLinkedTotal] = useState(0);
   const [selected, setSelected] = useState<MatrixRow | null>(null);

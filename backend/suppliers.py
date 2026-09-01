@@ -124,11 +124,9 @@ def _slug(name: str) -> str:
 
 
 def _safe_id(raw: str) -> str:
-    s = re.sub(r"[^\w\-]+", "_", (raw or "").strip())
+    s = re.sub(r"[^\w\-]+", "_", (raw or "").strip(), flags=re.UNICODE)
     s = re.sub(r"_+", "_", s).strip("_")
-    if not s:
-        raise HTTPException(400, "Invalid supplier id")
-    return s[:64]
+    return (s or "TEDARIKCI")[:64]
 
 
 def _dir(supplier_id: str) -> Path:
@@ -208,6 +206,11 @@ def list_suppliers(q: str = "") -> dict:
             "status": data.get("status") or "ACTIVE",
             "external_ref": data.get("external_ref") or "",
             "note": data.get("note") or "",
+            "material_family": data.get("material_family") or "",
+            "recycled_content_pct": data.get("recycled_content_pct"),
+            "heavy_metals": data.get("heavy_metals") or {},
+            "svhc": data.get("svhc") or {},
+            "pfas": data.get("pfas") or {},
             "updated_at": data.get("updated_at"),
             "link_count": len(links),
             **summary,
@@ -253,12 +256,18 @@ def save_supplier(
     note: str = "",
     contact: str = "",
     materials: str = "",
+    material_family: str = "",
+    recycled_content_pct: float | None = None,
+    recyclability_note: str = "",
+    heavy_metals: dict | None = None,
+    svhc: dict | None = None,
+    pfas: dict | None = None,
     supplier_id: str | None = None,
 ) -> dict:
     _ensure()
     name = (name or "").strip()
     if len(name) < 2:
-        raise HTTPException(400, "Supplier name required")
+        raise HTTPException(400, "Tedarikçi adı en az 2 karakter olmalı")
     code = (code or "").strip() or _slug(name)
     status = (status or "ACTIVE").strip().upper()
     if status not in ("ACTIVE", "INACTIVE", "PENDING"):
@@ -271,6 +280,17 @@ def save_supplier(
     if _meta_path(sid).exists():
         prev = _load(sid)
 
+    decl = normalize_link(
+        {
+            "material_family": material_family or "",
+            "recycled_content_pct": recycled_content_pct,
+            "recyclability_note": recyclability_note or "",
+            "heavy_metals": heavy_metals or {},
+            "svhc": svhc or {},
+            "pfas": pfas or {},
+        }
+    )
+
     data = {
         "id": sid,
         "code": code,
@@ -281,6 +301,12 @@ def save_supplier(
         "contact": (contact or "").strip(),
         "materials": (materials or "").strip(),
         "note": (note or "").strip(),
+        "material_family": decl.get("material_family") or "",
+        "recycled_content_pct": decl.get("recycled_content_pct"),
+        "recyclability_note": decl.get("recyclability_note") or "",
+        "heavy_metals": decl.get("heavy_metals"),
+        "svhc": decl.get("svhc"),
+        "pfas": decl.get("pfas"),
         "created_at": prev.get("created_at") or _now(),
         "updated_at": _now(),
     }
@@ -641,6 +667,7 @@ def link_component(
         existing["updated_at"] = _now()
         link = existing
     else:
+        supplier = _load(supplier_id)
         link = {
             "id": f"L_{uuid.uuid4().hex[:8]}",
             "component_code": code,
@@ -651,6 +678,12 @@ def link_component(
             "scope": scope,
             "linked_at": _now(),
             "updated_at": _now(),
+            "material_family": supplier.get("material_family") or "",
+            "recycled_content_pct": supplier.get("recycled_content_pct"),
+            "recyclability_note": supplier.get("recyclability_note") or "",
+            "heavy_metals": supplier.get("heavy_metals") or {},
+            "svhc": supplier.get("svhc") or {},
+            "pfas": supplier.get("pfas") or {},
         }
         links.append(link)
 

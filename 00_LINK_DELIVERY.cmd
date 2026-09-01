@@ -1,11 +1,20 @@
 @echo off
 cd /d "%~dp0"
-set "SRC=C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"
 set "DST=%~dp0delivery"
-if not exist "%SRC%" (
-  echo Kaynak yok: %SRC%
+set "SRC="
+
+if exist "C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output\01_STARTER_INDIVIDUAL_DELIVERY_REV00" (
+  set "SRC=C:\Users\burcu\Documents\YAZILIM\Inci_Aku_PPWR_PIMS\output"
+)
+if not defined SRC if exist "C:\Users\sozmen\Desktop\EU Packaging and Packaging Waste Regulation\Güncel sistem_20260818\01_STARTER_INDIVIDUAL_DELIVERY_REV00" (
+  set "SRC=C:\Users\sozmen\Desktop\EU Packaging and Packaging Waste Regulation\Güncel sistem_20260818"
+)
+if not defined SRC (
+  echo Kaynak yok: teslimat setleri bulunamadi.
+  echo Beklenen: Inci_Aku_PPWR_PIMS\output veya Guncel sistem_20260818
   exit /b 1
 )
+
 mkdir "%DST%" 2>nul
 for %%D in (
   01_STARTER_INDIVIDUAL_DELIVERY_REV00
@@ -19,4 +28,5 @@ for %%D in (
   )
 )
 echo Teslimat setleri programa baglandi.
+echo Kaynak: %SRC%
 dir /AL "%DST%"

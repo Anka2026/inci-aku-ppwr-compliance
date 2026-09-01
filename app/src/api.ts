@@ -283,6 +283,12 @@ export type SupplierCard = {
   note?: string;
   contact?: string;
   materials?: string;
+  material_family?: string;
+  recycled_content_pct?: number | null;
+  recyclability_note?: string;
+  heavy_metals?: SubstanceDecl;
+  svhc?: SubstanceDecl;
+  pfas?: SubstanceDecl;
   doc_count: number;
   link_count?: number;
   has_tds: boolean;
@@ -363,6 +369,10 @@ export type BulkCreateResult = {
   count_skipped: number;
   count_failed: number;
 };
+
+// Document generation (DOCX build + PDF conversion) can take minutes,
+// especially via MS Word COM automation — give those calls a long budget.
+const DOC_GEN_TIMEOUT_MS = 300000;
 
 async function j<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers || {});
@@ -569,6 +579,7 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     }),
   packsOpen: async (product_code: string, file: string) => {
     const r = await j<{ opened: string; download?: boolean; download_url?: string }>(
@@ -663,6 +674,7 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     }),
   wsOpen: async (product_code: string, file: string, revision?: string) => {
     const r = await j<{
@@ -688,6 +700,7 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ codes_text, label }),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     });
     if (r.download_url) {
       r.downloadHref = triggerDownload(r.download_url, r.zip_name);
@@ -704,6 +717,7 @@ export const api = {
         reason: "Bulk import from master",
         skip_pdf,
       }),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     }),
   wsCompletePdfs: (code: string, revision?: string) =>
     j<{
@@ -717,12 +731,12 @@ export const api = {
       `/api/workspace/products/${encodeURIComponent(code)}/complete-pdfs${
         revision ? `?revision=${encodeURIComponent(revision)}` : ""
       }`,
-      { method: "POST" },
+      { method: "POST", signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS) },
     ),
   wsCompleteAll: () =>
     j<{ count: number; completed: number; results: unknown[] }>(
       "/api/workspace/complete-incomplete",
-      { method: "POST" },
+      { method: "POST", signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS) },
     ),
   wsActivity: (limit = 20) =>
     j<{ count: number; events: { at: string; action: string; [k: string]: unknown }[] }>(
@@ -778,6 +792,7 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ label: label || null }),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     });
     if (r.download_url) {
       r.downloadHref = triggerDownload(r.download_url, r.zip_name);
@@ -793,6 +808,7 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ then_zip, scope: "starter" }),
+      signal: AbortSignal.timeout(DOC_GEN_TIMEOUT_MS),
     });
     if (r.zip?.download_url) {
       r.zip.downloadHref = triggerDownload(r.zip.download_url, r.zip.zip_name);
@@ -819,6 +835,12 @@ export const api = {
     note?: string;
     contact?: string;
     materials?: string;
+    material_family?: string;
+    recycled_content_pct?: number | null;
+    recyclability_note?: string;
+    heavy_metals?: SubstanceDecl;
+    svhc?: SubstanceDecl;
+    pfas?: SubstanceDecl;
     id?: string;
   }) =>
     j<SupplierCard & { documents: SupplierDocument[] }>("/api/suppliers", {

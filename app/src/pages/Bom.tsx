@@ -7,7 +7,7 @@ const RECENT_KEY = "inci_ppwr_bom_sets";
 
 export default function Bom() {
   const { setCode: routeSet } = useParams();
-  const [setCode, setSetCode] = useState(routeSet ? decodeURIComponent(routeSet) : "");
+  const [setCode, setSetCode] = useState(routeSet ? decodeURIComponent(routeSet) : "ST-021-STD-03");
   const [data, setData] = useState<BomResponse | null>(null);
   const [recents, setRecents] = useState<string[]>([]);
   const [err, setErr] = useState("");
@@ -53,7 +53,9 @@ export default function Bom() {
       const decoded = decodeURIComponent(routeSet);
       setSetCode(decoded);
       void load(decoded);
+      return;
     }
+    if (setCode) void load(setCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeSet]);
 
